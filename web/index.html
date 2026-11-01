@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CZ Meter Log Reader</title>
+<style>
+  :root { --bg: #14161b; --panel: #1d2027; --line: #2d313b; --text: #e8e9ec; --dim: #9aa0ad; --accent: #4fb3ff; --good: #5fd08a; --bad: #ef6f6c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 system-ui, sans-serif; }
+  main { max-width: 1040px; margin: 0 auto; padding: 24px 16px 60px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 28px 0 10px; }
+  p { margin: 0 0 12px; }
+  .dim { color: var(--dim); }
+  #drop { display: block; margin: 18px 0; padding: 36px 16px; text-align: center; background: var(--panel); border: 2px dashed var(--line); border-radius: 8px; cursor: pointer; }
+  #drop.over { border-color: var(--accent); }
+  #file { display: none; }
+  #bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin-bottom: 14px; display: none; }
+  #bar i { display: block; height: 100%; width: 0; background: var(--accent); }
+  #error { color: var(--bad); }
+  .pulls { display: flex; flex-wrap: wrap; gap: 8px; }
+  button { font: inherit; color: var(--text); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+  button.on { border-color: var(--accent); }
+  .kill { color: var(--good); }
+  .wipe { color: var(--bad); }
+  .wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { color: var(--dim); font-weight: 500; }
+  th:first-child, td:first-child { text-align: left; }
+  tr.row { cursor: pointer; }
+  tr.row:hover, tr.row.on { background: var(--panel); }
+</style>
+</head>
+<body>
+<main>
+  <h1>CZ Meter Log Reader</h1>
+  <p class="dim">Your combat log is read on this computer. Nothing is uploaded.</p>
+  <label id="drop">
+    <input id="file" type="file" accept=".txt">
+    <b>Drop WoWCombatLog.txt here</b>, or click to choose it<br>
+    <span class="dim">World of Warcraft\_retail_\Logs</span>
+  </label>
+  <div id="bar"><i></i></div>
+  <p id="error"></p>
+  <div id="out"></div>
+</main>
+<script src="parser.js"></script>
+<script>
+  var out = document.getElementById("out");
+  var bar = document.getElementById("bar");
+  var errorText = document.getElementById("error");
+  var drop = document.getElementById("drop");
+  var log = null, pullIndex = 0, playerIndex = 0;
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function num(n) {
+    if (n === null || n === undefined) return "-";
+    if (n >= 1e6) return (n / 1e6).toFixed(2) + "M";
+    if (n >= 1e3) return (n / 1e3).toFixed(1) + "K";
+    return String(Math.round(n));
+  }
+  function pct(a, b) { return b > 0 ? (a / b * 100).toFixed(1) + "%" : "-"; }
+  function clock(ms) {
+    var s = Math.round(ms / 1000);
+    return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+  }
+
+  function progress(done) {
+    bar.style.display = "block";
+    bar.firstElementChild.style.width = (done * 100).toFixed(1) + "%";
+  }
+  function finished(result) {
+    bar.style.display = "none";
+    log = result;
+    pullIndex = 0;
+    playerIndex = 0;
+    render();
+  }
+  function failed(message) {
+    bar.style.display = "none";
+    errorText.textContent = message;
+  }
+
+  function read(file) {
+    errorText.textContent = "";
+    out.innerHTML = "";
+    progress(0);
+    var worker;
+    function onThisPage() {
+      window.CZLogParser.parseFile(file, progress).then(finished, function (e) { failed(String(e)); });
+    }
+    // Opening the page straight from disk blocks workers in some browsers.
+    try { worker = new Worker("worker.js"); } catch (e) { onThisPage(); return; }
+    worker.onerror = function (e) { e.preventDefault(); worker.terminate(); onThisPage(); };
+    worker.onmessage = function (e) {
+      var m = e.data;
+      if (m.type === "progress") progress(m.done);
+      else {
+        worker.terminate();
+        if (m.type === "result") finished(m.result);
+        else failed(m.message);
+      }
+    };
+    worker.postMessage(file);
+  }
+
+  function render() {
+    if (!log.pulls.length) {
+      out.innerHTML = "<p>No boss pulls in this log. Turn on logging with /combatlog before you pull.</p>";
+      return;
+    }
+    var html = "";
+    if (!log.advanced) html += '<p class="wipe">Advanced Combat Logging is off for this log, so numbers may be wrong. Turn it on under Options, Network.</p>';
+    if (!log.supported) html += '<p class="wipe">This log is format version ' + esc(log.logVersion) + ", which this page hasn't been tested with.</p>";
+    html += '<div class="pulls">' + log.pulls.map(function (p, i) {
+      var state = p.success === true ? '<span class="kill">Kill</span>' : p.success === false ? '<span class="wipe">Wipe</span>' : "Unfinished";
+      return '<button data-pull="' + i + '" class="' + (i === pullIndex ? "on" : "") + '">' + esc(p.name) + " " + clock(p.durationMs) + " " + state + "</button>";
+    }).join("") + "</div>";
+
+    var pull = log.pulls[pullIndex];
+    html += "<h2>Players</h2><div class=\"wrap\"><table><tr><th>Player</th><th>Damage</th><th>DPS</th><th>Share</th><th>Deaths</th></tr>";
+    var total = pull.players.reduce(function (a, p) { return a + p.damage; }, 0);
+    pull.players.forEach(function (p, i) {
+      html += '<tr class="row ' + (i === playerIndex ? "on" : "") + '" data-player="' + i + '"><td>' + esc(p.name) + "</td><td>" + num(p.damage) + "</td><td>" + num(p.dps) + "</td><td>" + pct(p.damage, total) + "</td><td>" + p.deaths + "</td></tr>";
+    });
+    html += "</table></div>";
+
+    var player = pull.players[playerIndex];
+    if (player) {
+      html += "<h2>" + esc(player.name) + ": spells</h2><div class=\"wrap\"><table><tr><th>Spell</th><th>Damage</th><th>Share</th><th>Casts</th><th>Per cast</th><th>Hits</th><th>Crit</th><th>Ticks</th><th>Tick crit</th><th>Min</th><th>Max</th></tr>";
+      player.spells.forEach(function (s) {
+        if (s.total <= 0) return;
+        html += "<tr><td>" + esc(s.name) + "</td><td>" + num(s.total) + "</td><td>" + pct(s.total, player.damage) + "</td><td>" + (s.casts || "-") + "</td><td>" + (s.casts ? num(s.total / s.casts) : "-") + "</td><td>" + s.hits + "</td><td>" + pct(s.crits, s.hits) + "</td><td>" + s.ticks + "</td><td>" + pct(s.tickCrits, s.ticks) + "</td><td>" + num(s.min) + "</td><td>" + num(s.max) + "</td></tr>";
+      });
+      html += "</table></div><h2>" + esc(player.name) + ": buffs and debuffs they applied</h2><div class=\"wrap\"><table><tr><th>Aura</th><th>Type</th><th>Uptime</th><th>Applied</th></tr>";
+      player.auras.forEach(function (a) {
+        html += "<tr><td>" + esc(a.name) + "</td><td>" + esc(a.kind === "BUFF" ? "Buff" : "Debuff") + "</td><td>" + (a.uptime * 100).toFixed(1) + "%</td><td>" + a.applies + "</td></tr>";
+      });
+      html += "</table></div>";
+    }
+
+    html += "<h2>Enemies</h2><div class=\"wrap\"><table><tr><th>Enemy</th><th>Damage taken</th></tr>";
+    pull.enemies.forEach(function (e) {
+      html += "<tr><td>" + esc(e.name) + "</td><td>" + num(e.total) + "</td></tr>";
+    });
+    html += "</table></div>";
+    if (pull.unattributed > 0) html += '<p class="dim" style="margin-top:12px">' + num(pull.unattributed) + " damage came from pets or guardians the log doesn't link to a player, so it counts towards enemies but no player.</p>";
+    out.innerHTML = html;
+  }
+
+  out.addEventListener("click", function (e) {
+    var pullBtn = e.target.closest("[data-pull]");
+    var row = e.target.closest("[data-player]");
+    if (pullBtn) { pullIndex = +pullBtn.dataset.pull; playerIndex = 0; render(); }
+    else if (row) { playerIndex = +row.dataset.player; render(); }
+  });
+  document.getElementById("file").addEventListener("change", function (e) {
+    if (e.target.files[0]) read(e.target.files[0]);
+  });
+  ["dragenter", "dragover"].forEach(function (name) {
+    drop.addEventListener(name, function (e) { e.preventDefault(); drop.classList.add("over"); });
+  });
+  ["dragleave", "drop"].forEach(function (name) {
+    drop.addEventListener(name, function (e) { e.preventDefault(); drop.classList.remove("over"); });
+  });
+  drop.addEventListener("drop", function (e) {
+    if (e.dataTransfer.files[0]) read(e.dataTransfer.files[0]);
+  });
+</script>
+</body>
+</html>
