@@ -3,7 +3,7 @@ local ADDON, ns = ...
 local Data, Window = ns.Data, ns.Window
 
 local DEFAULTS = {
-  metric = 1, tab = "players", view = "current", top = 5, width = 500,
+  metric = 1, tab = "players", view = "current", top = 5, windowWidth = 430,
   myOnly = false, showBest = false, shown = true, best = {},
 }
 

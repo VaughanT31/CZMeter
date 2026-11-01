@@ -17,9 +17,9 @@ local DIM = { 0.55, 0.58, 0.64 }
 local ENEMY_COLOR = { 0.72, 0.30, 0.28 }
 local DEFAULT_COLOR = { 0.45, 0.48, 0.55 }
 
-local MIN_WIDTH, MAX_WIDTH = 460, 800
-local ROW_HEIGHT, ROW_GAP = 28, 2
-local TOP_HEIGHT = 92
+local MIN_WIDTH, MAX_WIDTH = 430, 800
+local ROW_HEIGHT, ROW_GAP = 22, 1
+local TOP_HEIGHT = 54
 local MAX_ROWS = 40
 local TOP_CHOICES = { 5, 10, 20, 40 }
 
@@ -56,10 +56,10 @@ end
 -- A rounded button. active = filled orange text, otherwise quiet.
 local function Pill(parent, width, text, onClick, height)
   local b = CreateFrame("Button", nil, parent)
-  b:SetSize(width, height or 24)
+  b:SetSize(width, height or 20)
   b.fill = Round(b, "Round", "BACKGROUND", 0.20, 0.22, 0.27, 0.9)
   b.line = Round(b, "RoundLine", "BORDER", 0.30, 0.32, 0.38, 0.9)
-  b.label = Label(b, 12, TEXT, "CENTER")
+  b.label = Label(b, 10, TEXT, "CENTER")
   b.label:SetPoint("CENTER")
   b.label:SetText(text or "")
   b:SetScript("OnClick", onClick)
@@ -91,11 +91,11 @@ local function Pill(parent, width, text, onClick, height)
 end
 
 local function IconPill(parent, file, tip, onClick)
-  local b = Pill(parent, 30, "", onClick)
+  local b = Pill(parent, 20, "", onClick)
   b.tip = tip
   local icon = b:CreateTexture(nil, "ARTWORK")
   icon:SetTexture(file)
-  icon:SetSize(16, 16)
+  icon:SetSize(13, 13)
   icon:SetPoint("CENTER")
   return b
 end
@@ -128,37 +128,37 @@ local function CreateRow(index)
   row.layer:SetAllPoints()
   row.layer:SetFrameLevel(row.bar:GetFrameLevel() + 2)
 
-  row.rank = Label(row.layer, 12, DIM, "CENTER")
-  row.rank:SetPoint("LEFT", 6, 0)
-  row.rank:SetWidth(18)
+  row.rank = Label(row.layer, 11, DIM, "CENTER")
+  row.rank:SetPoint("LEFT", 4, 0)
+  row.rank:SetWidth(14)
 
   row.icon = row.layer:CreateTexture(nil, "ARTWORK")
-  row.icon:SetSize(20, 20)
-  row.icon:SetPoint("LEFT", 26, 0)
+  row.icon:SetSize(16, 16)
+  row.icon:SetPoint("LEFT", 20, 0)
   row.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 
-  row.name = Label(row.layer, 13, TEXT)
-  row.name:SetPoint("LEFT", 52, 0)
-  row.name:SetWidth(112)
+  row.name = Label(row.layer, 12, TEXT)
+  row.name:SetPoint("LEFT", 40, 0)
+  row.name:SetWidth(104)
 
   row.badge = CreateFrame("Frame", nil, row.layer)
-  row.badge:SetSize(50, 18)
-  row.badge:SetPoint("LEFT", 168, 0)
+  row.badge:SetSize(36, 16)
+  row.badge:SetPoint("LEFT", 148, 0)
   Round(row.badge, "Round", "BACKGROUND", 0.05, 0.22, 0.26, 0.95)
-  row.badgeText = Label(row.badge, 11, { 0.78, 0.92, 0.95 }, "CENTER")
+  row.badgeText = Label(row.badge, 10, { 0.78, 0.92, 0.95 }, "CENTER")
   row.badgeText:SetPoint("CENTER")
 
-  row.share = Label(row.layer, 12, TEXT, "RIGHT")
-  row.share:SetPoint("RIGHT", -8, 0)
-  row.share:SetWidth(50)
+  row.share = Label(row.layer, 11, TEXT, "RIGHT")
+  row.share:SetPoint("RIGHT", -6, 0)
+  row.share:SetWidth(42)
 
-  row.dps = Label(row.layer, 12, TEXT, "RIGHT")
-  row.dps:SetPoint("RIGHT", row.share, "LEFT", -6, 0)
-  row.dps:SetWidth(74)
+  row.dps = Label(row.layer, 11, TEXT, "RIGHT")
+  row.dps:SetPoint("RIGHT", row.share, "LEFT", -4, 0)
+  row.dps:SetWidth(58)
 
-  row.value = Label(row.layer, 13, TEXT, "RIGHT")
-  row.value:SetPoint("RIGHT", row.dps, "LEFT", -6, 0)
-  row.value:SetWidth(62)
+  row.value = Label(row.layer, 12, TEXT, "RIGHT")
+  row.value:SetPoint("RIGHT", row.dps, "LEFT", -4, 0)
+  row.value:SetWidth(52)
 
   row.me = Round(row.layer, "RoundLine", "OVERLAY", ORANGE[1], ORANGE[2], ORANGE[3], 0.9)
   row.me:Hide()
@@ -285,12 +285,11 @@ function Window.Refresh()
   end
 
   local shown = math.max(#chosen, 1)
-  frame:SetHeight(TOP_HEIGHT + shown * (ROW_HEIGHT + ROW_GAP) + 10)
+  frame:SetHeight(TOP_HEIGHT + shown * (ROW_HEIGHT + ROW_GAP) + 8)
 
-  controls.metric.label:SetText(isEnemyTab and "Damage to enemies" or metric.label)
+  controls.metric.label:SetText(isEnemyTab and "Enemy damage" or metric.label)
   frame.valueHeader:SetText(isEnemyTab and "DAMAGE" or metric.column)
   frame.dpsHeader:SetText((metric.perSecond and not isEnemyTab) and (metric.key == "DamageDone" and "DPS" or "PER SEC") or "")
-  frame.nameHeader:SetText(isEnemyTab and "ENEMY" or "PLAYER")
 
   if CZMeterDB.view == "current" and not CZMeterDB.showBest and ns.combatStart then
     frame.timer:SetText(ns.Clock(GetTime() - ns.combatStart))
@@ -443,7 +442,7 @@ local function Build()
     self:StopMovingOrSizing()
     SavePosition()
   end)
-  frame:SetWidth(CZMeterDB.width)
+  frame:SetWidth(CZMeterDB.windowWidth)
   local pos = CZMeterDB.pos
   if pos then
     frame:SetPoint(pos[1], UIParent, pos[2], pos[3], pos[4])
@@ -454,106 +453,104 @@ local function Build()
   Round(frame, "Round", "BACKGROUND", 0.07, 0.08, 0.10, 0.88)
   Round(frame, "RoundLine", "BORDER", 0.25, 0.27, 0.32, 0.8)
 
-  -- First line: metric, My DPS, Best try, timer
+  -- One control line: metric and timer on the left, everything else on the right
   local prev = CreateFrame("Button", nil, frame)
-  prev:SetSize(20, 24)
-  prev:SetPoint("TOPLEFT", 10, -8)
-  prev.text = Label(prev, 16, TEXT, "CENTER")
+  prev:SetSize(16, 20)
+  prev:SetPoint("TOPLEFT", 8, -6)
+  prev.text = Label(prev, 14, TEXT, "CENTER")
   prev.text:SetPoint("CENTER")
   prev.text:SetText("<")
   prev:SetScript("OnClick", function() StepMetric(-1) end)
 
   local metricButton = CreateFrame("Button", nil, frame)
-  metricButton:SetSize(150, 24)
+  metricButton:SetSize(112, 20)
   metricButton:SetPoint("LEFT", prev, "RIGHT", 2, 0)
-  metricButton.label = Label(metricButton, 15, ORANGE)
+  metricButton.label = Label(metricButton, 12, ORANGE)
   metricButton.label:SetPoint("LEFT", 2, 0)
-  metricButton.label:SetWidth(128)
+  metricButton.label:SetWidth(98)
   local arrow = metricButton:CreateTexture(nil, "ARTWORK")
   arrow:SetTexture("Interface\\Buttons\\Arrow-Down-Up")
-  arrow:SetSize(14, 14)
+  arrow:SetSize(11, 11)
   arrow:SetPoint("RIGHT", 0, -2)
   arrow:SetVertexColor(ORANGE[1], ORANGE[2], ORANGE[3])
   metricButton:SetScript("OnClick", OpenMetricMenu)
   controls.metric = metricButton
 
   local nextMetric = CreateFrame("Button", nil, frame)
-  nextMetric:SetSize(20, 24)
+  nextMetric:SetSize(16, 20)
   nextMetric:SetPoint("LEFT", metricButton, "RIGHT", 2, 0)
-  nextMetric.text = Label(nextMetric, 16, TEXT, "CENTER")
+  nextMetric.text = Label(nextMetric, 14, TEXT, "CENTER")
   nextMetric.text:SetPoint("CENTER")
   nextMetric.text:SetText(">")
   nextMetric:SetScript("OnClick", function() StepMetric(1) end)
 
-  frame.timer = Label(frame, 13, DIM, "RIGHT")
-  frame.timer:SetPoint("TOPRIGHT", -12, -13)
-  frame.timer:SetWidth(44)
-
-  controls.best = Pill(frame, 66, "Best try", function()
-    CZMeterDB.showBest = not CZMeterDB.showBest
-    RefreshControls()
-  end)
-  controls.best:SetPoint("TOPRIGHT", -60, -8)
-  controls.best.tip = "The group's best pull on the last boss you fought, saved after combat."
-
-  controls.myDps = Pill(frame, 62, "My DPS", function()
-    CZMeterDB.myOnly = not CZMeterDB.myOnly
-    RefreshControls()
-  end)
-  controls.myDps:SetPoint("RIGHT", controls.best, "LEFT", -6, 0)
-  controls.myDps.tip = "Show only your own row."
-
-  -- Second line: tabs, history, copy, top, reset
-  controls.players = Pill(frame, 62, "Players", function()
-    CZMeterDB.tab = "players"
-    RefreshControls()
-  end)
-  controls.players:SetPoint("TOPLEFT", 10, -38)
-
-  controls.enemies = Pill(frame, 66, "Enemies", function()
-    CZMeterDB.tab = "enemies"
-    CZMeterDB.showBest = false
-    RefreshControls()
-  end)
-  controls.enemies:SetPoint("LEFT", controls.players, "RIGHT", 4, 0)
-  controls.enemies.tip = "Group damage into each enemy type. Identical adds share one row."
+  frame.timer = Label(frame, 11, DIM)
+  frame.timer:SetPoint("LEFT", nextMetric, "RIGHT", 3, 0)
+  frame.timer:SetWidth(32)
 
   controls.reset = IconPill(frame, "Interface\\Buttons\\UI-RefreshButton", "Clear meter history", function()
     if InCombatLockdown() then return end
     StaticPopup_Show("CZMETER_RESET")
   end)
-  controls.reset:SetPoint("TOPRIGHT", -10, -38)
+  controls.reset:SetPoint("TOPRIGHT", -8, -6)
 
-  controls.top = Pill(frame, 56, "Top 5", CycleTop)
-  controls.top:SetPoint("RIGHT", controls.reset, "LEFT", -6, 0)
+  controls.top = Pill(frame, 36, "Top 5", CycleTop)
+  controls.top:SetPoint("RIGHT", controls.reset, "LEFT", -3, 0)
 
   controls.copy = IconPill(frame, "Interface\\Buttons\\UI-GuildButton-PublicNote-Up", "Copy these numbers", ShowCopy)
-  controls.copy:SetPoint("RIGHT", controls.top, "LEFT", -6, 0)
+  controls.copy:SetPoint("RIGHT", controls.top, "LEFT", -3, 0)
 
-  controls.history = Pill(frame, 74, "Current", OpenHistoryMenu)
-  controls.history:SetPoint("RIGHT", controls.copy, "LEFT", -6, 0)
+  controls.history = Pill(frame, 50, "Current", OpenHistoryMenu)
+  controls.history:SetPoint("RIGHT", controls.copy, "LEFT", -3, 0)
 
-  -- Column headings, lined up with the row columns
+  controls.best = Pill(frame, 44, "Best try", function()
+    CZMeterDB.showBest = not CZMeterDB.showBest
+    RefreshControls()
+  end)
+  controls.best:SetPoint("RIGHT", controls.history, "LEFT", -3, 0)
+  controls.best.tip = "The group's best pull on the last boss you fought, saved after combat."
+
+  controls.myDps = Pill(frame, 44, "My DPS", function()
+    CZMeterDB.myOnly = not CZMeterDB.myOnly
+    RefreshControls()
+  end)
+  controls.myDps:SetPoint("RIGHT", controls.best, "LEFT", -3, 0)
+  controls.myDps.tip = "Show only your own row."
+
+  -- Second line: tabs on the left, column headings lined up with the rows
   local head = CreateFrame("Frame", nil, frame)
-  head:SetPoint("TOPLEFT", 10, -68)
-  head:SetPoint("TOPRIGHT", -10, -68)
-  head:SetHeight(18)
-  frame.nameHeader = Label(head, 10, DIM)
-  frame.nameHeader:SetPoint("LEFT", 52, 0)
-  local shareHeader = Label(head, 10, DIM, "RIGHT")
-  shareHeader:SetPoint("RIGHT", -8, 0)
-  shareHeader:SetWidth(50)
+  head:SetPoint("TOPLEFT", 8, -30)
+  head:SetPoint("TOPRIGHT", -8, -30)
+  head:SetHeight(20)
+
+  controls.players = Pill(head, 46, "Players", function()
+    CZMeterDB.tab = "players"
+    RefreshControls()
+  end, 18)
+  controls.players:SetPoint("LEFT")
+
+  controls.enemies = Pill(head, 48, "Enemies", function()
+    CZMeterDB.tab = "enemies"
+    CZMeterDB.showBest = false
+    RefreshControls()
+  end, 18)
+  controls.enemies:SetPoint("LEFT", controls.players, "RIGHT", 3, 0)
+  controls.enemies.tip = "Group damage into each enemy type. Identical adds share one row."
+
+  local shareHeader = Label(head, 9, DIM, "RIGHT")
+  shareHeader:SetPoint("RIGHT", -6, 0)
+  shareHeader:SetWidth(42)
   shareHeader:SetText("SHARE")
-  frame.dpsHeader = Label(head, 10, DIM, "RIGHT")
-  frame.dpsHeader:SetPoint("RIGHT", shareHeader, "LEFT", -6, 0)
-  frame.dpsHeader:SetWidth(74)
-  frame.valueHeader = Label(head, 10, DIM, "RIGHT")
-  frame.valueHeader:SetPoint("RIGHT", frame.dpsHeader, "LEFT", -6, 0)
-  frame.valueHeader:SetWidth(62)
+  frame.dpsHeader = Label(head, 9, DIM, "RIGHT")
+  frame.dpsHeader:SetPoint("RIGHT", shareHeader, "LEFT", -4, 0)
+  frame.dpsHeader:SetWidth(58)
+  frame.valueHeader = Label(head, 9, DIM, "RIGHT")
+  frame.valueHeader:SetPoint("RIGHT", frame.dpsHeader, "LEFT", -4, 0)
+  frame.valueHeader:SetWidth(52)
 
   frame.body = CreateFrame("Frame", nil, frame)
-  frame.body:SetPoint("TOPLEFT", 10, -TOP_HEIGHT + 4)
-  frame.body:SetPoint("TOPRIGHT", -10, -TOP_HEIGHT + 4)
+  frame.body:SetPoint("TOPLEFT", 8, -TOP_HEIGHT)
+  frame.body:SetPoint("TOPRIGHT", -8, -TOP_HEIGHT)
   frame.body:SetHeight(10)
 
   frame.empty = Label(frame.body, 12, DIM, "CENTER")
@@ -568,7 +565,7 @@ local function Build()
   grip:SetScript("OnMouseDown", function() frame:StartSizing("RIGHT") end)
   grip:SetScript("OnMouseUp", function()
     frame:StopMovingOrSizing()
-    CZMeterDB.width = math.floor(frame:GetWidth())
+    CZMeterDB.windowWidth = math.floor(frame:GetWidth())
     SavePosition()
   end)
 
