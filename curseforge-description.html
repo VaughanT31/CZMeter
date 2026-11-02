@@ -1,0 +1,68 @@
+<p><strong>A light, modern damage meter for Midnight.</strong> Since Midnight, every damage meter reads the same numbers from the game's own meter. CZ Meter is built around making those numbers easy to read: a clean window that stays small, live bars through boss fights and Mythic+ keys, and a click away from anyone's spell breakdown.</p>
+<ul>
+<li><strong>Live bars:</strong> bars and numbers keep moving through boss fights and keys, in Blizzard's own order.</li>
+<li><strong>Every metric:</strong> damage, healing, absorbs, damage taken, avoidable damage, interrupts, dispels, deaths and damage into each enemy.</li>
+<li><strong>Fight history:</strong> the current fight, the overall total or any earlier pull.</li>
+<li><strong>Best try:</strong> your group's best pull of the last boss next to the one you just did.</li>
+<li><strong>Player details:</strong> click a row for that player's spells, targets and defensive numbers.</li>
+<li><strong>More than one window:</strong> up to six, each with its own metric. Drag them together and they snap into a group that moves and locks as one.</li>
+<li><strong>Skins you can share:</strong> Default, Minimal and Classic built in, or make your own and send it to a friend as a text string.</li>
+<li><strong>Your own row:</strong> outlined and always on the list, even when you're below the cut.</li>
+<li><strong>Item level badges</strong> next to each player, read out of combat.</li>
+<li><strong>Light on your frame rate:</strong> a few redraws a second in combat, and nothing at all out of combat unless something changed.</li>
+</ul>
+<p>No setup. Install it, type <code>/cz</code>, and the meter is there.</p>
+
+<p><span style="color: #ffd100;"><strong>The Window</strong></span><br>Each row shows the player's rank, spec icon, name, item level, total and per second, with share as an option. Step through metrics with the arrows or pick one from the list, switch between <strong>Current</strong>, <strong>Overall</strong> and earlier pulls, and flip from <strong>Players</strong> to <strong>Enemies</strong> to see how much damage went into each enemy type. <strong>My DPS</strong> shows only your row, <strong>Top</strong> sets how many rows to show, and the copy button gives you the numbers as text to paste into chat. Windows keep a fixed height and scroll with the mouse wheel, so a full raid fits, or they can grow with the number of rows.</p>
+
+<p><span style="color: #ffd100;"><strong>Player Details</strong></span><br>Click any player's row to open their breakdown for that window's metric and fight. The header shows their total, per second, share of the group and rank. <strong>Spells</strong> lists each ability with its total, per second and share of the player's total; hover one for overkill and targets. <strong>Targets</strong> adds up damage per target where the game gives a split. <strong>Defense</strong> shows damage taken, avoidable damage, absorbs, healing, interrupts, dispels and deaths, each with a rank, and the spells that hit them hardest, with avoidable ones in red.</p>
+
+<p><span style="color: #ffd100;"><strong>Several Windows, Snapped Together</strong></span><br>Open a new window from the window menu and it picks the next metric, so one can show damage and another healing. Drag a window close to another and it sticks to that edge. Stuck windows move together when you drag any of them, lock together, and come apart again with <strong>Ungroup</strong>.</p>
+
+<p><span style="color: #ffd100;"><strong>Skins</strong></span><br>Three skins come built in: <strong>Default</strong> (rounded, with item level badges), <strong>Minimal</strong> (flat, see-through, compact toolbar) and <strong>Classic</strong> (textured bars and outlined text). Change anything you like and a custom copy is saved for you, so the built-in ones never change. <strong>Export</strong> gives you a short text string to send to a friend, and <strong>Import</strong> adds theirs to your list. A skin only holds looks: no names and nothing from your meter.</p>
+
+<p><span style="color: #ffd100;"><strong>Options</strong></span><br>Pick the window you're editing at the top, tick <strong>Editing group</strong> to change every window stuck to it at once, then work through the pages:</p>
+<ul>
+<li><strong>Display:</strong> update speed in combat, mouse wheel speed, short or full numbers, clearing the meter when a key starts or when you enter a new dungeon or raid, your own bar colour, and creating, locking, closing or deleting windows.</li>
+<li><strong>Window:</strong> skin, width, height, scale, how many rows, toolbar size, column headings, background, border and accent colours.</li>
+<li><strong>Bars:</strong> row height and gap, texture, direction, class colours or one colour, brightness, opacity and the class stripe.</li>
+<li><strong>Text:</strong> font, size, outline, colours, and which columns show (also under Columns in each window's menu).</li>
+<li><strong>Skins:</strong> save, delete, export and import.</li>
+<li><strong>Combat log:</strong> start it automatically in raids and Mythic+ (or every dungeon and raid), with a warning when Advanced Combat Logging is off.</li>
+</ul>
+<p><strong>Test bars</strong> fill every window with 25 made-up players, so you can try skins and see a full raid list without being in one.</p>
+
+<p><span style="color: #ffd100;"><strong>Numbers in Combat</strong></span><br>In Midnight the game hides meter values from addons during combat. CZ Meter can still draw them, so bars and numbers stay live, and anything it works out itself (share, the spell breakdown, item levels) fills in once the fight ends. Your own details open any time; other players' details open once combat ends.</p>
+
+<p><span style="color: #ffd100;"><strong>Combat Log and Disk Space</strong></span><br>Automatic logging is off unless you turn it on. When CZ Meter starts the log, it stops it again when you leave the instance or log out, and never touches a log you started yourself. Log files can reach several GB after a few raid nights and addons can't delete files, so CZ Meter counts the hours it has logged and reminds you to clear old files from your Logs folder (after 10 hours by default, or never).</p>
+
+<p><span style="color: #ffd100;"><strong>Commands</strong></span></p>
+<ul>
+<li><code>/cz</code>: show or hide the meter (or right-click the minimap button)</li>
+<li><code>/cz options</code>: the options (also left-click the minimap button, or Esc > Options > AddOns)</li>
+<li><code>/cz new</code>: open another window</li>
+<li><code>/cz lock</code>: lock or unlock every window</li>
+<li><code>/cz test</code>: test bars on or off</li>
+</ul>
+
+<p><span style="color: #ffd100;"><strong>Good to Know</strong></span></p>
+<ul>
+<li>Retail (Midnight) only.</li>
+<li>Built on the game's own meter data, so the totals match Blizzard's meter.</li>
+<li>Enemy rows merge identical adds into one row, and their per second figure isn't shown because the game's doesn't match the total.</li>
+<li>Bugs and ideas are welcome in the comments or on our <a href="https://discord.gg/wz7fw6jM9Z">Discord</a>.</li>
+</ul>
+
+<p><span style="color: #ffd100;"><strong>Also by CtrlShiftZed</strong></span></p>
+<ul>
+<li><a href="https://www.curseforge.com/wow/addons/recommended-stats">Recommended Stats</a>: stat priority, BiS gear, talents and rotation from the top players of your spec.</li>
+<li><a href="https://www.curseforge.com/wow/addons/push-planner">Push Planner</a>: the fastest set of Mythic+ keys to reach your target rating.</li>
+<li><a href="https://www.curseforge.com/wow/addons/party-item-level-checker">Party iLvl Check</a>: your group's item level, M+ score and buffs the moment you enter a dungeon.</li>
+<li><a href="https://www.curseforge.com/wow/addons/alt-inventory-tracker">Alt Inventory</a>: how many of an item each of your characters has, right in the tooltip.</li>
+<li><a href="https://www.curseforge.com/wow/addons/auction-coach">Auction Coach</a>: plain-English Auction House advice, a simpler alternative to TSM.</li>
+<li><a href="https://www.curseforge.com/wow/addons/trust-crafter">Trust Crafter</a>: remembers who crafted your orders and how well, with guild sharing you can check.</li>
+<li><a href="https://www.curseforge.com/wow/addons/patron-planner-better-view-of-patron-orders">Patron Planner</a>: see which crafting orders are worth doing and work through them from one queue.</li>
+</ul>
+
+<p><span style="color: #ffd100;"><strong>Support</strong></span><br>CZ Meter is free. If it helps you, you can buy me a coffee.</p>
+<p><a href="https://ko-fi.com/G2G01YLR68" target="_blank" rel="nofollow noopener"><img style="border: 0px;" src="https://storage.ko-fi.com/cdn/brandasset/v2/support_me_on_kofi_badge_red.png" alt="Buy Me a Coffee at ko-fi.com" height="36"></a></p>
