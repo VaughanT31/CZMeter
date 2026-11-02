@@ -1,0 +1,94 @@
+name: Bug report
+description: Something in CZ Meter doesn't work or shows the wrong thing.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. The more detail you give, the faster it gets fixed.
+        Quick questions are often answered faster on [Discord](https://discord.gg/wz7fw6jM9Z), and the [wiki](https://ctrlshiftzed.com/wiki/cz-meter/questions) covers the common ones.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What went wrong, and what did you expect instead?
+      placeholder: "After a boss kill, the healing window showed nothing until I reloaded."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: How can it be reproduced?
+      description: The steps that lead to it, as far as you know them.
+      placeholder: |
+        1. Open a second window with /cz new and set it to Healing
+        2. Pull a boss
+        3. ...
+    validations:
+      required: false
+
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where were you?
+      multiple: true
+      options:
+        - Raid
+        - Mythic+
+        - Normal or heroic dungeon
+        - Delve
+        - Open world
+        - Training dummy
+        - Test bars (/cz test)
+    validations:
+      required: false
+
+  - type: dropdown
+    id: combat
+    attributes:
+      label: In or out of combat?
+      options:
+        - In combat
+        - Out of combat
+        - Both
+        - Not sure
+    validations:
+      required: false
+
+  - type: textarea
+    id: error
+    attributes:
+      label: Lua error
+      description: |
+        If the game showed an error, paste it here. To see errors, type `/console scriptErrors 1`, or use BugSack and BugGrabber.
+      render: text
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: CZ Meter version
+      description: Shown in the AddOns list, or on CurseForge under your installed addons.
+      placeholder: "0.2.0"
+    validations:
+      required: true
+
+  - type: input
+    id: game
+    attributes:
+      label: Game version
+      placeholder: "12.1.5"
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Screenshots, your skin export string, other addons that might be involved.
+    validations:
+      required: false

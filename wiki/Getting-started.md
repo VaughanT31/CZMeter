@@ -7,7 +7,7 @@ CZ Meter is a light damage meter built on the game's own meter data, so its tota
 ### Install
 
 1. **CurseForge app:** search for **CZ Meter** and click Install.
-2. **By hand:** download it from [CurseForge](https://www.curseforge.com/wow/addons/cz-meter) and put the `CZMeter` folder in `World of Warcraft\_retail_\Interface\AddOns`.
+2. **By hand:** download it from [CurseForge](https://www.curseforge.com/wow/addons/czmeter) and put the `CZMeter` folder in `World of Warcraft\_retail_\Interface\AddOns`.
 3. Start the game. If the game was already running, restart it rather than using `/reload`, so the new files load.
 
 ### First use

@@ -2,7 +2,7 @@
 
 How to use CZ Meter: reading the window, player details, several windows snapped together, skins you can share, the options and the combat log.
 
-Also on the website: [CZ Meter wiki](https://ctrlshiftzed.com/wiki/cz-meter/) | Get it on [CurseForge](https://www.curseforge.com/wow/addons/cz-meter)
+Also on the website: [CZ Meter wiki](https://ctrlshiftzed.com/wiki/cz-meter/) | Get it on [CurseForge](https://www.curseforge.com/wow/addons/czmeter)
 
 ## Pages
 

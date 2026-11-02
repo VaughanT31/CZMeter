@@ -1,0 +1,49 @@
+name: Feature request
+description: An idea that would make CZ Meter better.
+title: "[Idea] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ideas are welcome. Have a quick look at the [roadmap](https://ctrlshiftzed.com/cz-meter) first, it might already be planned.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would you like to do?
+      description: What are you trying to see or do that CZ Meter doesn't help with yet?
+      placeholder: "I'd like to see how my last pull compares with my best one without opening another window."
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: How would it work?
+      description: How you picture it. Rough is fine, a sketch or screenshot helps.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of CZ Meter?
+      multiple: true
+      options:
+        - The meter window
+        - Player details
+        - Several windows and groups
+        - Skins
+        - Options
+        - Combat log
+        - Something new
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+    validations:
+      required: false

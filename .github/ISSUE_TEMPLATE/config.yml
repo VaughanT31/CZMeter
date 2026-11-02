@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ask on Discord
+    url: https://discord.gg/wz7fw6jM9Z
+    about: Questions, help and chat with other players.
+  - name: Read the wiki
+    url: https://ctrlshiftzed.com/wiki/cz-meter/
+    about: Every feature explained step by step, with answers to common questions.
