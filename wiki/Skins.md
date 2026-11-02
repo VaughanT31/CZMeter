@@ -18,6 +18,9 @@ Change any look setting (colours, bars, fonts, row size) and a custom copy of th
 
 On the Skins page you can also **save** the current look as a new skin with your own name, or **delete** one. Windows wearing a deleted skin go back to Default.
 
+![The Skins page](https://ctrlshiftzed.com/assets/img/shots/czm-options-skins.webp)
+*The Skins page*
+
 ### Sharing
 
 1. On the Skins page, pick the skin and click **Export**.

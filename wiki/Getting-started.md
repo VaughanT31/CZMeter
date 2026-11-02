@@ -18,6 +18,9 @@ CZ Meter is a light damage meter built on the game's own meter data, so its tota
 
 There's no setup. To see a full list without being in a group, type `/cz test` for test bars.
 
+![Two windows, one for damage and one for healing](https://ctrlshiftzed.com/assets/img/shots/czm-windows.webp)
+*Two windows, one for damage and one for healing*
+
 > The minimap button opens the options with a left click and shows or hides the meter with a right click.
 
 ---

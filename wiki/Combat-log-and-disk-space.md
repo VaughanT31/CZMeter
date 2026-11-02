@@ -14,6 +14,9 @@ On the **Combat log** page of the options, pick when to log:
 
 If Advanced Combat Logging is off, CZ Meter warns you, since log sites need it. Turn it on in Esc > Options > Network.
 
+![Starting the combat log automatically](https://ctrlshiftzed.com/assets/img/shots/czm-options-combat-log.webp)
+*Starting the combat log automatically*
+
 ### When it stops
 
 When CZ Meter starts the log, it stops it again when you leave the instance or log out. It never touches a log you started yourself with `/combatlog`.

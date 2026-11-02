@@ -43,6 +43,10 @@ The cog holds **Columns**, **Clear meter history**, **New window**, **Lock**, **
 | **Interrupts** | Spell casts interrupted |
 | **Dispels** | Effects dispelled |
 | **Deaths** | Deaths in the fight |
+| **Enemy damage** | Damage that went into each enemy (the same as the Enemies tab) |
+
+![Click the metric name for the list](https://ctrlshiftzed.com/assets/img/shots/czm-metrics.webp)
+*Click the metric name for the list*
 
 ### Height and scrolling
 
