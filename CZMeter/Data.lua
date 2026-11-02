@@ -21,13 +21,62 @@ local METRICS = {
 }
 Data.METRICS = METRICS
 
-function Data.Metric()
-  return METRICS[CZMeterDB.metric] or METRICS[1]
+-- Each window passes its own settings (metric, tab, view, best try).
+function Data.Metric(win)
+  return METRICS[win.metric] or METRICS[1]
+end
+
+-- Numbers in our chosen style. Secret values can only take Blizzard's short form.
+function ns.Num(value)
+  if value == nil then return "" end
+  if issecret(value) then return AbbreviateNumbers(value) end
+  if type(value) ~= "number" then return "" end
+  if CZMeterDB.opt.numbers == "full" then return BreakUpLargeNumbers(math.floor(value + 0.5)) end
+  return AbbreviateNumbers(value)
+end
+
+---------------------------------------------------------------------------
+-- Test bars: made-up rows so skins and big raid windows can be tried anywhere
+---------------------------------------------------------------------------
+local TEST_CLASSES = {
+  { "WARRIOR", "Warrior" }, { "PALADIN", "Paladin" }, { "HUNTER", "Hunter" }, { "ROGUE", "Rogue" },
+  { "PRIEST", "Priest" }, { "DEATHKNIGHT", "DeathKnight" }, { "SHAMAN", "Shaman" }, { "MAGE", "Mage" },
+  { "WARLOCK", "Warlock" }, { "MONK", "Monk" }, { "DRUID", "Druid" }, { "DEMONHUNTER", "DemonHunter" },
+  { "EVOKER", "Evoker" },
+}
+local TEST_NAMES = {
+  "Brannick", "Lysa", "Torvald", "Quill", "Seraphine", "Mordrak", "Tavi", "Elandor", "Vex", "Hollin",
+  "Kestra", "Ozric", "Pell", "Ysolde", "Grimm", "Nalia", "Corvin", "Sabre", "Dunmore", "Ilsa",
+  "Fenwick", "Rhea", "Bastian", "Juno", "Wick",
+}
+local TEST_SCALE = {
+  DamageDone = 1, HealingDone = 0.6, Absorbs = 0.2, DamageTaken = 0.3, AvoidableDamageTaken = 0.05,
+  Interrupts = 0, Dispels = 0, Deaths = 0,
+}
+local TEST_SECONDS = 180
+
+function Data.TestRows(metric)
+  local rows = {}
+  local scale = TEST_SCALE[metric.key] or 1
+  for i, name in ipairs(TEST_NAMES) do
+    local class = TEST_CLASSES[(i - 1) % #TEST_CLASSES + 1]
+    local total
+    if scale == 0 then
+      total = math.max(0, 9 - i)
+    else
+      total = math.floor(18000000 * scale * 0.93 ^ (i - 1))
+    end
+    rows[i] = {
+      name = name, classFilename = class[1], specIconID = "Interface\\Icons\\ClassIcon_" .. class[2],
+      totalAmount = total, amountPerSecond = total / TEST_SECONDS, isLocalPlayer = i == 7,
+    }
+  end
+  return rows, rows[1].totalAmount, TEST_SECONDS
 end
 
 -- The session this view is showing, or nil.
-local function ReadSession(meterType)
-  local view = CZMeterDB.view
+local function ReadSession(win, meterType)
+  local view = win.view
   local ok, session
   if view == "overall" then
     ok, session = pcall(C_DamageMeter.GetCombatSessionFromType, Enum.DamageMeterSessionType.Overall, meterType)
@@ -40,10 +89,15 @@ local function ReadSession(meterType)
 end
 
 -- Returns rows, the bar scale, the duration if readable, and the column info.
-function Data.Read()
-  local metric = Data.Metric()
+function Data.Read(win)
+  local metric = Data.Metric(win)
 
-  if CZMeterDB.showBest then
+  if ns.testMode then
+    local rows, maxAmount, duration = Data.TestRows(metric)
+    return rows, maxAmount, duration, metric
+  end
+
+  if win.showBest then
     local best = Data.BestTry()
     if best then
       return best.rows, best.maxAmount, best.duration, metric, best
@@ -52,14 +106,149 @@ function Data.Read()
   end
 
   local meterType
-  if CZMeterDB.tab == "enemies" then
+  if win.tab == "enemies" then
     meterType = Enum.DamageMeterType.EnemyDamageTaken
   else
     meterType = Enum.DamageMeterType[metric.key]
   end
-  local session = meterType and ReadSession(meterType)
+  local session = meterType and ReadSession(win, meterType)
   if type(session) ~= "table" then return {}, 1, nil, metric end
   return session.combatSources or {}, session.maxAmount, session.durationSeconds, metric
+end
+
+---------------------------------------------------------------------------
+-- One player's breakdown for the detail panel
+---------------------------------------------------------------------------
+-- The same session the window shows, for one source and one meter.
+function Data.ReadSource(win, meterKey, guid)
+  local meterType = Enum.DamageMeterType[meterKey]
+  if not meterType or guid == nil then return nil end
+  local view = win.view
+  local ok, src
+  if type(view) == "number" then
+    ok, src = pcall(C_DamageMeter.GetCombatSessionSourceFromID, view, meterType, guid)
+  else
+    local kind = view == "overall" and Enum.DamageMeterSessionType.Overall or Enum.DamageMeterSessionType.Current
+    ok, src = pcall(C_DamageMeter.GetCombatSessionSourceFromType, kind, meterType, guid)
+  end
+  if ok and type(src) == "table" then return src end
+end
+
+-- The whole group's rows for one meter, in the window's view.
+function Data.ReadMeter(win, meterKey)
+  local meterType = Enum.DamageMeterType[meterKey]
+  local session = meterType and ReadSession(win, meterType)
+  if type(session) == "table" then return session.combatSources or {}, session end
+  return {}
+end
+
+local function Plain(value)
+  return value ~= nil and not issecret(value) and type(value) == "number"
+end
+Data.Plain = Plain
+
+local function SpellInfo(spellID)
+  if not Plain(spellID) then return nil, nil end
+  local name = C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(spellID)
+  local icon = C_Spell and C_Spell.GetSpellTexture and C_Spell.GetSpellTexture(spellID)
+  return name, icon
+end
+
+-- A source's spells as rows. Out of combat they're merged by name (one ability
+-- can log under several IDs), sorted, and given a share of the player's total.
+-- In combat the values are secret, so they're passed through in Blizzard's order.
+function Data.Spells(src)
+  local out = {}
+  local spells = type(src) == "table" and src.combatSpells
+  if type(spells) ~= "table" then return out, false end
+  local readable = true
+  for _, sp in ipairs(spells) do
+    if not Plain(sp.totalAmount) then readable = false break end
+  end
+  if not readable then
+    for i, sp in ipairs(spells) do
+      local name, icon = SpellInfo(sp.spellID)
+      out[i] = { name = name or "Spell", icon = icon, total = sp.totalAmount, perSecond = sp.amountPerSecond }
+    end
+    return out, false
+  end
+
+  local byName, sum = {}, 0
+  for _, sp in ipairs(spells) do
+    local name, icon = SpellInfo(sp.spellID)
+    name = name or ("Spell " .. tostring(sp.spellID))
+    local row = byName[name]
+    if not row then
+      row = { name = name, icon = icon, total = 0, perSecond = 0, overkill = 0, ids = {}, targets = {} }
+      byName[name] = row
+      out[#out + 1] = row
+    end
+    row.total = row.total + sp.totalAmount
+    if Plain(sp.amountPerSecond) then row.perSecond = row.perSecond + sp.amountPerSecond end
+    if Plain(sp.overkillAmount) then row.overkill = row.overkill + sp.overkillAmount end
+    if sp.isAvoidable == true then row.avoidable = true end
+    if sp.isDeadly == true then row.deadly = true end
+    row.ids[#row.ids + 1] = sp.spellID
+    local details = sp.combatSpellDetails
+    if type(details) == "table" then
+      if details.unitName ~= nil then details = { details } end
+      for _, t in ipairs(details) do
+        local unit = t.unitName
+        if unit ~= nil and not issecret(unit) and unit ~= "" and Plain(t.amount) and t.amount > 0 then
+          row.targets[unit] = (row.targets[unit] or 0) + t.amount
+        end
+      end
+    end
+    sum = sum + sp.totalAmount
+  end
+  table.sort(out, function(a, b) return a.total > b.total end)
+  for _, row in ipairs(out) do row.share = sum > 0 and row.total / sum * 100 or 0 end
+  return out, true
+end
+
+-- Damage per target, added up over every spell. Empty when the game gives no split.
+function Data.Targets(spellRows)
+  local byName, out, sum = {}, {}, 0
+  for _, sp in ipairs(spellRows) do
+    for unit, amount in pairs(sp.targets or {}) do
+      local row = byName[unit]
+      if not row then
+        row = { name = unit, total = 0 }
+        byName[unit] = row
+        out[#out + 1] = row
+      end
+      row.total = row.total + amount
+      sum = sum + amount
+    end
+  end
+  table.sort(out, function(a, b) return a.total > b.total end)
+  for _, row in ipairs(out) do row.share = sum > 0 and row.total / sum * 100 or 0 end
+  return out
+end
+
+-- Test bars: a made-up spell list for the detail panel.
+local TEST_SPELLS = {
+  { "Shadow Strike", "Interface\\Icons\\Ability_Rogue_ShadowStrikes", 0.31 },
+  { "Eviscerate", "Interface\\Icons\\Ability_Rogue_Eviscerate", 0.22 },
+  { "Rupture", "Interface\\Icons\\Ability_Rogue_Rupture", 0.14 },
+  { "Melee", "Interface\\Icons\\INV_Sword_04", 0.11 },
+  { "Shuriken Storm", "Interface\\Icons\\Ability_Rogue_ShurikenStorm", 0.09 },
+  { "Secret Technique", "Interface\\Icons\\Ability_Rogue_SecretTechnique", 0.07 },
+  { "Deadly Poison", "Interface\\Icons\\Ability_Rogue_DualWeild", 0.04 },
+  { "Black Powder", "Interface\\Icons\\Ability_Rogue_BlackPowder", 0.02 },
+}
+
+function Data.TestSource(src)
+  local spells = {}
+  for i, def in ipairs(TEST_SPELLS) do
+    local total = math.floor(src.totalAmount * def[3])
+    spells[i] = {
+      name = def[1], icon = def[2], total = total, perSecond = total / TEST_SECONDS,
+      overkill = math.floor(total * 0.03), share = def[3] * 100,
+      targets = { ["Training Boss"] = math.floor(total * 0.8), ["Shadow Add"] = total - math.floor(total * 0.8) },
+    }
+  end
+  return spells
 end
 
 -- Share of the total, only once the numbers can be read. Nil in combat.

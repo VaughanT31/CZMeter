@@ -2,11 +2,16 @@
 ## Title: CZ Meter
 ## Notes: A light, modern damage meter built on Blizzard's own meter data. /cz
 ## Author: CtrlShift_Zed
-## Version: 0.1.1
+## Version: 0.2.0
 ## Category: CtrlShift_Zed
+## IconTexture: Interface\AddOns\CZMeter\Media\icon
 ## SavedVariables: CZMeterDB
 ## X-License: MIT
 
 Data.lua
+Skins.lua
 Window.lua
+Detail.lua
+Options.lua
+Minimap.lua
 Core.lua
