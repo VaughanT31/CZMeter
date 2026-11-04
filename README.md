@@ -23,7 +23,7 @@ No setup. Install it, type `/cz`, and the meter is there.
 
 ## The window
 
-Each row shows the player's rank, spec icon, name, item level, total and per second, with share as an option. Step through metrics with the arrows or pick one from the list, switch between **Current**, **Overall** and earlier pulls, and flip from **Players** to **Enemies** to see how much damage went into each enemy type. **My DPS** shows only your row, **Top** sets how many rows to show, and the copy button gives you the numbers as text to paste into chat. Windows keep a fixed height and scroll with the mouse wheel, so a full raid fits, or they can grow with the number of rows.
+Each row shows the player's rank, spec icon, name, item level, total and per second, with share as an option. Step through metrics with the arrows or pick one from the list, switch between **Current**, **Overall** and earlier pulls, and flip from **Players** to **Enemies** to see how much damage went into each enemy type. **My DPS** shows only your row, **Always show me** keeps your row on the bottom line when you're below the rows in view, **Top** sets how many rows to show, and the copy button gives you the numbers as text to paste into chat. Windows keep a fixed height and scroll with the mouse wheel, so a full raid fits, or they can grow with the number of rows.
 
 ## Player details
 

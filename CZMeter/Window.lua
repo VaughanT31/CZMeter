@@ -32,7 +32,7 @@ Window.MIN_HEIGHT, Window.MAX_HEIGHT = MIN_HEIGHT, MAX_HEIGHT
 Window.MAX_WINDOWS, Window.TOP_CHOICES = MAX_WINDOWS, TOP_CHOICES
 
 Window.DEFAULTS = {
-  metric = 1, tab = "players", view = "current", top = 40, myOnly = false, showBest = false,
+  metric = 1, tab = "players", view = "current", top = 40, myOnly = false, showBest = false, alwaysMe = true,
   width = 430, height = 200, autoHeight = false, scale = 1, shown = true, locked = false,
   skin = "Default",
 }
@@ -430,7 +430,7 @@ local function ChooseRows(db, list)
   for i, src in ipairs(list) do
     if i <= limit then
       out[#out + 1] = { src = src, rank = i }
-    elseif src.isLocalPlayer == true and #out > 0 then
+    elseif db.alwaysMe and src.isLocalPlayer == true and #out > 0 then
       -- Below the cut, so the last row shows you at your real rank.
       out[#out] = { src = src, rank = i }
       break
@@ -467,8 +467,21 @@ function Window.Refresh(w)
   w.offset = math.max(0, math.min(w.offset, #chosen - visible))
   w.chosenCount, w.visible = #chosen, visible
 
+  -- "Always show me": when your row is out of sight (the window is too
+  -- short, or scrolled), it takes the bottom row, at your real rank.
+  local pinned
+  if db.alwaysMe and not db.myOnly and not isEnemyTab and #chosen > visible then
+    for i, entry in ipairs(chosen) do
+      if entry.src.isLocalPlayer == true then
+        if i <= w.offset or i > w.offset + visible then pinned = entry end
+        break
+      end
+    end
+  end
+
   for i = 1, MAX_ROWS do
     local entry = i <= visible and chosen[i + w.offset]
+    if pinned and i == visible then entry = pinned end
     local row = w.rows[i]
     if entry then
       if not row then
@@ -883,6 +896,10 @@ local function OpenWindowMenu(w, owner)
         Window.SetSkinValue(w, key, not w.skin[key], Window.GroupOf(w))
       end)
     end
+    root:CreateCheckbox("Always show me", function() return w.db.alwaysMe end, function()
+      w.db.alwaysMe = not w.db.alwaysMe
+      Window.Refresh(w)
+    end)
     if w.compact then
       root:CreateCheckbox("My DPS only", function() return w.db.myOnly end, function()
         w.db.myOnly = not w.db.myOnly

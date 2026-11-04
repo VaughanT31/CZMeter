@@ -25,11 +25,13 @@ Open the window menu (the cog) and pick **Columns** to choose which columns show
 - **Copy:** the numbers as text, to paste into chat.
 - **The cog:** the window menu. See below.
 
+**Always show me** (in the window menu, on by default) keeps your own row in sight. If you're below the top rows, or the window is too short to reach you, your row takes the bottom line at your real rank.
+
 On a narrow window the toolbar goes compact, and the buttons that don't fit move into the window menu.
 
 ### The window menu
 
-The cog holds **Columns**, **Clear meter history**, **New window**, **Lock**, **Ungroup**, **Close window** and **Options**.
+The cog holds **Columns**, **Always show me**, **Clear meter history**, **New window**, **Lock**, **Ungroup**, **Close window** and **Options**.
 
 ### Metrics
 

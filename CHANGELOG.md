@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0
+
+- **Always show me:** a new option in each window's menu (the cog), on by default. Your own row stays in sight: when your DPS is below the rows in view, or the window is too short to reach you, your row takes the bottom line, at your real rank. Turn it off to see only the top rows.
+
 ## 0.2.1
 
 - Combat log options: the "I've cleared my logs" button no longer sits on top of the hours logged line.
