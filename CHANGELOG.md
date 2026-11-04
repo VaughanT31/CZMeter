@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+- Combat log options: the "I've cleared my logs" button no longer sits on top of the hours logged line.
+
 ## 0.2.0
 
 First public release.

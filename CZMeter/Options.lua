@@ -617,7 +617,8 @@ PAGES[#PAGES + 1] = { key = "log", label = "Combat log", build = function(page)
   right:Note("Log files can reach several GB after a few raid nights. Addons can't see or delete files, so CZ Meter only turns logging off when you leave and reminds you to clear old logs from World of Warcraft\\_retail_\\Logs.")
   right:Slider("Remind me after", 0, 40, 1, function() return GetOpt("logRemindHours") end,
     function(v) SetOpt("logRemindHours", v) end, "%d hours")
-  local logged = right:Note(" ")
+  -- Two lines held for the count, which wraps, so the button below doesn't sit on it.
+  local logged = right:Note(" \n ")
   right:Button("I've cleared my logs", function() ns.ClearLoggedTime() end, 150,
     "Starts the count again.")
   right:Note("Set the reminder to 0 to turn it off.")
