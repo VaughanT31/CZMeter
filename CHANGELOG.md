@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.2
+
+- **Update checks in addon managers:** the addon now carries its CurseForge project ID, so addon managers that read it can match it to CurseForge and tell you when an update is out.
+
 ## 0.3.1
 
 - **WoW Forever:** CZ Meter now runs on WoW Forever too. It has the same built-in meter as Retail, so everything works the same way.
