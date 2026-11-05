@@ -16,6 +16,15 @@ local issecret = ns.issecret
 
 local MEDIA = "Interface\\AddOns\\CZMeter\\Media\\"
 local FLAT = "Interface\\Buttons\\WHITE8x8"
+
+-- n UI units rounded to whole screen pixels at this frame's scale, at
+-- least n pixels' worth of one, so lines and gaps never fall between pixels.
+local function Pixels(frame, n)
+  if PixelUtil and PixelUtil.GetNearestPixelSize then
+    return PixelUtil.GetNearestPixelSize(n, frame:GetEffectiveScale(), n)
+  end
+  return n
+end
 local ENEMY_COLOR = { 0.72, 0.30, 0.28 }
 local DEFAULT_COLOR = { 0.45, 0.48, 0.55 }
 
@@ -457,7 +466,7 @@ function Window.Refresh(w)
 
   local step = Step(w)
   local visible
-  if db.autoHeight and not w.sizing then
+  if db.autoHeight and not w.sizing and not SideAttached(w) then
     visible = math.min(#chosen, MAX_ROWS)
     w.frame:SetHeight(w.top + math.max(visible, 1) * step + 8)
   else
@@ -592,7 +601,9 @@ local function ApplySkin(w)
   else
     w.bgRound:Hide()
     w.lineRound:Hide()
-    f:SetBackdrop({ bgFile = FLAT, edgeFile = FLAT, edgeSize = 1 })
+    -- One real screen pixel at any UI scale; a plain 1 can land between
+    -- pixels and vanish on one side.
+    f:SetBackdrop({ bgFile = FLAT, edgeFile = FLAT, edgeSize = Pixels(f, 1) })
     f:SetBackdropColor(skin.bg[1], skin.bg[2], skin.bg[3], skin.bg[4])
     f:SetBackdropBorderColor(skin.border[1], skin.border[2], skin.border[3], skin.border[4])
   end
@@ -619,12 +630,21 @@ end
 ---------------------------------------------------------------------------
 -- Placement
 ---------------------------------------------------------------------------
+-- { point, relative point, x sign, y sign }, then for windows side by side
+-- a second pair, so the attached window takes its height from the other.
 local ANCHORS = {
-  bottom = { "TOPLEFT", "BOTTOMLEFT", 0, -GAP },
-  top = { "BOTTOMLEFT", "TOPLEFT", 0, GAP },
-  right = { "TOPLEFT", "TOPRIGHT", GAP, 0 },
-  left = { "TOPRIGHT", "TOPLEFT", -GAP, 0 },
+  bottom = { "TOPLEFT", "BOTTOMLEFT", 0, -1 },
+  top = { "BOTTOMLEFT", "TOPLEFT", 0, 1 },
+  right = { "TOPLEFT", "TOPRIGHT", 1, 0, "BOTTOMLEFT", "BOTTOMRIGHT" },
+  left = { "TOPRIGHT", "TOPLEFT", -1, 0, "BOTTOMRIGHT", "BOTTOMLEFT" },
 }
+
+-- True when the window sits beside another and takes its height from it.
+local function SideAttached(w)
+  local a = w.db.attach
+  return a ~= nil and (a.side == "left" or a.side == "right") and windows[a.to] ~= nil
+end
+Window.SideAttached = SideAttached
 
 -- True if following attachments up from a window leads to target.
 local function Reaches(from, target)
@@ -643,7 +663,9 @@ local function Place(w)
   local parent = db.attach and windows[db.attach.to]
   local anchor = db.attach and ANCHORS[db.attach.side]
   if parent and anchor and not Reaches(parent, w) then
-    f:SetPoint(anchor[1], parent.frame, anchor[2], anchor[3], anchor[4])
+    local gap = Pixels(f, GAP)
+    f:SetPoint(anchor[1], parent.frame, anchor[2], anchor[3] * gap, anchor[4] * gap)
+    if anchor[5] then f:SetPoint(anchor[5], parent.frame, anchor[6], anchor[3] * gap, 0) end
     return
   end
   db.attach = nil
@@ -726,7 +748,7 @@ local function ApplyGeometry(w)
   local db, f = w.db, w.frame
   f:SetScale(db.scale)
   f:SetWidth(math.max(MIN_WIDTH, math.min(db.width, MAX_WIDTH)))
-  if not db.autoHeight then f:SetHeight(math.max(MIN_HEIGHT, math.min(db.height, MAX_HEIGHT))) end
+  if not db.autoHeight and not SideAttached(w) then f:SetHeight(math.max(MIN_HEIGHT, math.min(db.height, MAX_HEIGHT))) end
   UpdateGrip(w)
 end
 
@@ -1076,8 +1098,20 @@ local function Build(w)
     w.sizing = nil
     w.db.width = math.floor(f:GetWidth() + 0.5)
     -- Dragging the height on a growing window means the player wants a fixed one.
-    if w.db.autoHeight and before and math.abs(f:GetHeight() - before) > 2 then w.db.autoHeight = false end
-    if not w.db.autoHeight then w.db.height = math.floor(f:GetHeight() + 0.5) end
+    local changed = before and math.abs(f:GetHeight() - before) > 2
+    -- Side by side, the windows share one height: it belongs to the first
+    -- window in the row, which every window beside it follows.
+    local owner = w
+    while SideAttached(owner) do owner = windows[owner.db.attach.to] end
+    if changed and owner ~= w then
+      owner.db.autoHeight = false
+      owner.db.height = math.max(MIN_HEIGHT, math.min(math.floor(f:GetHeight() + 0.5), MAX_HEIGHT))
+      owner.frame:SetHeight(owner.db.height)
+      Window.Refresh(owner)
+    elseif owner == w then
+      if w.db.autoHeight and changed then w.db.autoHeight = false end
+      if not w.db.autoHeight then w.db.height = math.floor(f:GetHeight() + 0.5) end
+    end
     -- Sizing can re-anchor the frame to the screen; put it back where it belongs.
     if w.db.attach then Place(w) else SavePosition(w) end
     Layout(w)

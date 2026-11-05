@@ -32,7 +32,7 @@ It's built to be light: a few redraws a second in combat, and none out of combat
 
 **Which game versions does it support?**
 
-Retail (Midnight) only.
+Retail (Midnight) and WoW Forever, which has the same built-in meter. Classic versions have no built-in meter, so they aren't supported.
 
 ---
 

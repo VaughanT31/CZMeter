@@ -74,7 +74,7 @@ Automatic logging is off unless you turn it on. When CZ Meter starts the log, it
 
 ## Good to know
 
-- Retail (Midnight) only.
+- Retail (Midnight) and WoW Forever.
 - Built on the game's own meter data, so the totals match Blizzard's meter.
 - Enemy rows merge identical adds into one row, and their per second figure isn't shown because the game's doesn't match the total.
 - Found a bug or have an idea? [Open an issue](https://github.com/VaughanT31/CZMeter/issues/new/choose) or ask on [Discord](https://discord.gg/wz7fw6jM9Z).

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.1
+
+- **WoW Forever:** CZ Meter now runs on WoW Forever too. It has the same built-in meter as Retail, so everything works the same way.
+- **Windows side by side share one height:** a window attached to the left or right of another now matches its height, and dragging the height on either one resizes both.
+- **Borders:** the left border of an attached window no longer goes missing at some UI scales. Borders and the gap between windows now line up with whole screen pixels.
+
 ## 0.3.0
 
 - **Always show me:** a new option in each window's menu (the cog), on by default. Your own row stays in sight: when your DPS is below the rows in view, or the window is too short to reach you, your row takes the bottom line, at your real rank. Turn it off to see only the top rows.
