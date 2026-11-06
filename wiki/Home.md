@@ -8,7 +8,7 @@ Also on the website: [CZ Meter wiki](https://ctrlshiftzed.com/wiki/cz-meter/) | 
 
 - [Getting started](Getting-started.md): Install it, type /cz, and the meter is there.
 - [The window](The-window.md): What each row shows and what the toolbar buttons do.
-- [Player details](Player-details.md): Click a row for that player's spells, targets and defensive numbers.
+- [Player details](Player-details.md): Hover a row for a quick look, or click it for that player's spells, targets and defensive numbers.
 - [Several windows](Several-windows.md): Open up to six windows and snap them together into a group.
 - [Skins](Skins.md): Built-in skins, your own changes, and sharing a skin as a text string.
 - [Options](Options.md): Every page of the options, and test bars to try them on.

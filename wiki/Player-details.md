@@ -1,8 +1,12 @@
 # Player details
 
-*Click a row for that player's spells, targets and defensive numbers.*
+*Hover a row for a quick look, or click it for that player's spells, targets and defensive numbers.*
 
 Click any player's row to open their breakdown for that window's metric and fight.
+
+### Quick look on hover
+
+Hover a row and a short card shows above the window (or below it, near the top of the screen): the player's total, per second, share and rank, and their top 8 spells. Your own card works in combat. Other players' cards show their totals in combat and fill in their spells once combat ends. Turn it off with **Show details when hovering a row** on the Display page.
 
 ### The header
 

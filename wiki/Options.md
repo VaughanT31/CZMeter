@@ -14,6 +14,7 @@ At the top, pick the **window you're editing**, and tick **Editing group** to ch
 - Clear the meter when a Mythic+ key starts, or when you enter a new dungeon or raid
 - Your own row: outline it, and give it a colour of its own
 - The minimap button
+- Show details when hovering a row
 - Create, lock, ungroup, close or delete windows
 
 ![The Display page](https://ctrlshiftzed.com/assets/img/shots/czm-options-display.webp)

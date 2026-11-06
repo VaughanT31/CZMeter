@@ -282,18 +282,28 @@ local function CreateRow(w)
   row:EnableMouse(true)
   row:EnableMouseWheel(true)
   row:RegisterForDrag("LeftButton")
-  row:SetScript("OnDragStart", function() f:GetScript("OnDragStart")(f) end)
+  row:SetScript("OnDragStart", function(self)
+    ns.Hover.Hide(self)
+    f:GetScript("OnDragStart")(f)
+  end)
   row:SetScript("OnDragStop", function() f:GetScript("OnDragStop")(f) end)
   row:SetScript("OnMouseWheel", function(_, delta) f:GetScript("OnMouseWheel")(f, delta) end)
   row:SetScript("OnMouseDown", function(self)
     self.downX, self.downY = GetCursorPosition()
   end)
+  -- Hovering shows a short version of the detail panel above the window.
+  row:SetScript("OnEnter", function(self) ns.Hover.Show(w, self) end)
+  row:SetScript("OnLeave", function(self) ns.Hover.Hide(self) end)
+  row:SetScript("OnHide", function(self) ns.Hover.Hide(self) end)
   row:SetScript("OnMouseUp", function(self, button)
     if button ~= "LeftButton" or not self.src or not self.downX then return end
     local x, y = GetCursorPosition()
     local moved = math.abs(x - self.downX) + math.abs(y - self.downY)
     self.downX = nil
-    if moved < 6 then ns.Detail.Open(w, self.src, self.rankNumber) end
+    if moved < 6 then
+      ns.Hover.Hide(self)
+      ns.Detail.Open(w, self.src, self.rankNumber)
+    end
   end)
   row:Hide()
   return row

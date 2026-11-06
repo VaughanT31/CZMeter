@@ -5,7 +5,7 @@ local Data, Window, Skins, Options = ns.Data, ns.Window, ns.Skins, ns.Options
 local OPT_DEFAULTS = {
   combatUpdate = 0.25, wheel = 1, numbers = "short",
   autoLog = "off", logWarn = true, clearOnKey = false, clearOnInstance = false,
-  minimapButton = true, minimapAngle = 200,
+  minimapButton = true, minimapAngle = 200, hoverCard = true,
   logRemindHours = 10, logSeconds = 0,
 }
 local PREFIX = "|cfff59e3bCZ Meter|r: "

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.0
+
+- **Hover a row for a quick look:** hovering a player's row shows a short breakdown above the window: their total, per second, share and rank, and their top 8 spells. Clicking still opens the full details. Your own card works in combat. Other players' cards show their totals in combat, and their spells once combat ends if the game won't give them sooner. Turn it off with "Show details when hovering a row" on the Display page of the options.
+- **Spell names and icons in combat:** your own spells in the details panel and the hover card now show their names and icons during combat, instead of "Spell".
+
 ## 0.3.2
 
 - **Update checks in addon managers:** the addon now carries its CurseForge project ID, so addon managers that read it can match it to CurseForge and tell you when an update is out.

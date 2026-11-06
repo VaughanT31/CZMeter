@@ -147,7 +147,17 @@ local function Plain(value)
 end
 Data.Plain = Plain
 
+-- In combat the spell ID is secret. The game still takes it and gives back a
+-- secret name and icon, which can be drawn but not read, so pass it through.
+local function SecretSpellInfo(spellID)
+  if not C_Spell then return nil, nil end
+  local okName, name = pcall(C_Spell.GetSpellName, spellID)
+  local okIcon, icon = pcall(C_Spell.GetSpellTexture, spellID)
+  return okName and name or nil, okIcon and icon or nil
+end
+
 local function SpellInfo(spellID)
+  if spellID ~= nil and issecret(spellID) then return SecretSpellInfo(spellID) end
   if not Plain(spellID) then return nil, nil end
   local name = C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(spellID)
   local icon = C_Spell and C_Spell.GetSpellTexture and C_Spell.GetSpellTexture(spellID)
@@ -168,7 +178,9 @@ function Data.Spells(src)
   if not readable then
     for i, sp in ipairs(spells) do
       local name, icon = SpellInfo(sp.spellID)
-      out[i] = { name = name or "Spell", icon = icon, total = sp.totalAmount, perSecond = sp.amountPerSecond }
+      -- name may be secret: compare with nil only, never test it as true/false.
+      if name == nil then name = "Spell" end
+      out[i] = { name = name, icon = icon, total = sp.totalAmount, perSecond = sp.amountPerSecond }
     end
     return out, false
   end

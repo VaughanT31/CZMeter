@@ -168,8 +168,7 @@ local function DrawRow(row, entry, accent)
   if max == nil then max = 1 end
   row.bar:SetMinMaxValues(0, max)
   if entry.noBar then row.bar:SetValue(0) else row.bar:SetValue(total) end
-  if entry.icon then
-    row.icon:SetTexture(entry.icon)
+  if entry.icon ~= nil and pcall(row.icon.SetTexture, row.icon, entry.icon) then
     row.icon:Show()
   else
     row.icon:Hide()

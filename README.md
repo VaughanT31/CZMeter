@@ -27,7 +27,7 @@ Each row shows the player's rank, spec icon, name, item level, total and per sec
 
 ## Player details
 
-Click any player's row to open their breakdown for that window's metric and fight. The header shows their total, per second, share of the group and rank. **Spells** lists each ability with its total, per second and share of the player's total; hover one for overkill and targets. **Targets** adds up damage per target where the game gives a split. **Defense** shows damage taken, avoidable damage, absorbs, healing, interrupts, dispels and deaths, each with a rank, and the spells that hit them hardest, with avoidable ones in red.
+Hover any player's row for a quick look above the window: their total, per second, share, rank and top spells. Click the row to open their full breakdown for that window's metric and fight. The header shows their total, per second, share of the group and rank. **Spells** lists each ability with its total, per second and share of the player's total; hover one for overkill and targets. **Targets** adds up damage per target where the game gives a split. **Defense** shows damage taken, avoidable damage, absorbs, healing, interrupts, dispels and deaths, each with a rank, and the spells that hit them hardest, with avoidable ones in red.
 
 ## Several windows, snapped together
 

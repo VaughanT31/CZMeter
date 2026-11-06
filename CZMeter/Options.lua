@@ -435,6 +435,9 @@ PAGES[#PAGES + 1] = { key = "display", label = "Display", build = function(page)
     SetOpt("minimapButton", v)
     ns.MinimapButton.Update()
   end, "Left click opens these options, right click shows or hides the meter.")
+  left:Check("Show details when hovering a row", function() return GetOpt("hoverCard") end,
+    function(v) SetOpt("hoverCard", v) end,
+    "A short breakdown above the window. Clicking a row still opens the full one.")
 
   left:Header("Overall data")
   left:Check("Clear the meter when a Mythic+ key starts",
