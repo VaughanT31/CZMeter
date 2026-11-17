@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0
+
+- **Compare to the last pull:** after a fight, the details panel and the hover card show how a player did against their previous pull on the same boss, as a percentage (per second, or the total for metrics without one), plus the spell that went up most and the one that went down most, for example "+4.2% vs last pull: Eviscerate +300K, Rupture -100K". Works for the current fight and any earlier pull in History. Not shown in combat, for Overall, best try or the Enemies tab, or on the first pull of a boss.
+
 ## 0.4.0
 
 - **Hover a row for a quick look:** hovering a player's row shows a short breakdown above the window: their total, per second, share and rank, and their top 8 spells. Clicking still opens the full details. Your own card works in combat. Other players' cards show their totals in combat, and their spells once combat ends if the game won't give them sooner. Turn it off with "Show details when hovering a row" on the Display page of the options.

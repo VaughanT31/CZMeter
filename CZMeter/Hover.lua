@@ -270,6 +270,16 @@ function Hover.Refresh()
     end
   end
 
+  local guid = src.sourceGUID
+  if guid ~= nil and issecret(guid) and src.isLocalPlayer == true then guid = UnitGUID("player") end
+  local cmp = not enemies and Data.Compare(w.db, guid)
+  local cmpLine
+  if cmp then
+    cmpLine = Data.CompareText(cmp)
+    local spells = Data.CompareSpellsText(cmp)
+    if spells then cmpLine = cmpLine .. ": " .. spells end
+  end
+
   if not note then
     local more = #spells - shown
     note = more > 0 and string.format("%d more. Click for the full breakdown.", more) or "Click for the full breakdown."
@@ -278,7 +288,7 @@ function Hover.Refresh()
   local listBottom = TOP_HEIGHT + shown * (ROW_HEIGHT + ROW_GAP)
   card.note:ClearAllPoints()
   card.note:SetPoint("TOPLEFT", PAD, -(listBottom + 4))
-  card.note:SetText(note)
+  card.note:SetText(cmpLine and (cmpLine .. "\n" .. note) or note)
   Color(card.note, dim)
   card:SetHeight(listBottom + 8 + card.note:GetStringHeight() + PAD)
   Place(w)

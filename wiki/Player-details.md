@@ -8,6 +8,10 @@ Click any player's row to open their breakdown for that window's metric and figh
 
 Hover a row and a short card shows above the window (or below it, near the top of the screen): the player's total, per second, share and rank, and their top 8 spells. Your own card works in combat. Other players' cards show their totals in combat and fill in their spells once combat ends. Turn it off with **Show details when hovering a row** on the Display page.
 
+### Compare to the last pull
+
+After a fight, the details panel and the hover card compare the player with their **previous pull on the same boss**: the change per second (or in total, for metrics without per second), the spell that went up most and the one that went down most, for example *+4.2% vs last pull: Eviscerate +300K, Rupture -100K*. It works for the current fight and any earlier pull you pick from History. It doesn't show in combat, for Overall, best try or the Enemies tab, or on the first pull of a boss.
+
 ### The header
 
 The player's spec, name in class colour, the metric and fight, and four numbers: **total**, **per second**, **share** of the group and **rank**.

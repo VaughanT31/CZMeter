@@ -427,7 +427,14 @@ function Detail.Refresh(force)
   end
   local view = info.win.db.view
   local viewText = ns.testMode and "test bars" or view == "overall" and "overall" or type(view) == "number" and "earlier pull" or "current fight"
-  panel.sub:SetText(metric.label .. ", " .. viewText)
+  local sub = metric.label .. ", " .. viewText
+  local cmp = Data.Compare(info.win.db, info.guid)
+  if cmp then
+    sub = sub .. "  |  " .. Data.CompareText(cmp)
+    local spells = Data.CompareSpellsText(cmp)
+    if spells then sub = sub .. ": " .. spells end
+  end
+  panel.sub:SetText(sub)
   Color(panel.sub, dim)
 
   local shares = Data.Shares(list)

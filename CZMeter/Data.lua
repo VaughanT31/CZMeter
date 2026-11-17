@@ -297,6 +297,89 @@ function Data.History()
   return out
 end
 
+---------------------------------------------------------------------------
+-- Compare with the previous pull (0.5.0)
+---------------------------------------------------------------------------
+-- The fight a window shows and the newest earlier one with the same name
+-- (the same boss), as session IDs: current, previous, name. Nil for the
+-- overall view, test bars, best try, or a fight with no earlier try.
+local function Pulls(win)
+  if ns.testMode or win.showBest or win.view == "overall" then return nil end
+  local ok, list = pcall(C_DamageMeter.GetAvailableCombatSessions)
+  if not ok or type(list) ~= "table" then return nil end
+  local byID, newest = {}, nil
+  for _, entry in ipairs(list) do
+    local id, name = entry.sessionID, entry.name
+    if id ~= nil and not issecret(id) and name ~= nil and not issecret(name) and name ~= "" then
+      byID[id] = name
+      if not newest or id > newest then newest = id end
+    end
+  end
+  local current = type(win.view) == "number" and win.view or newest
+  local name = current and byID[current]
+  if not name then return nil end
+  local previous
+  for id, other in pairs(byID) do
+    if other == name and id < current and (not previous or id > previous) then previous = id end
+  end
+  if not previous then return nil end
+  return current, previous, name
+end
+
+local function SourceAt(sessionID, meterKey, guid)
+  local meterType = Enum.DamageMeterType[meterKey]
+  if not meterType then return nil end
+  local ok, src = pcall(C_DamageMeter.GetCombatSessionSourceFromID, sessionID, meterType, guid)
+  if ok and type(src) == "table" then return src end
+end
+
+-- How a player did against their previous pull on the same boss, out of
+-- combat only: { pct, name, up = { name, delta }, down = { name, delta } }.
+-- pct compares per second when the metric has it, else the total.
+function Data.Compare(win, guid)
+  if guid == nil or issecret(guid) or InCombatLockdown() then return nil end
+  local current, previous, name = Pulls(win)
+  if not current then return nil end
+  local metric = Data.Metric(win)
+  if win.tab == "enemies" then return nil end
+  local now, before = SourceAt(current, metric.key, guid), SourceAt(previous, metric.key, guid)
+  if not now or not before then return nil end
+  local field = metric.perSecond and "amountPerSecond" or "totalAmount"
+  local a, b = now[field], before[field]
+  if not Plain(a) or not Plain(b) or b <= 0 then return nil end
+  local result = { pct = (a - b) / b * 100, name = name }
+
+  -- The spells that changed most, by total.
+  local spellsNow, readNow = Data.Spells(now)
+  local spellsBefore, readBefore = Data.Spells(before)
+  if readNow and readBefore then
+    local delta = {}
+    for _, sp in ipairs(spellsNow) do delta[sp.name] = (delta[sp.name] or 0) + sp.total end
+    for _, sp in ipairs(spellsBefore) do delta[sp.name] = (delta[sp.name] or 0) - sp.total end
+    for spell, d in pairs(delta) do
+      if d > 0 and (not result.up or d > result.up.delta) then result.up = { name = spell, delta = d } end
+      if d < 0 and (not result.down or d < result.down.delta) then result.down = { name = spell, delta = d } end
+    end
+  end
+  return result
+end
+
+-- "+4.2% vs last pull" in green, or red when lower.
+function Data.CompareText(cmp)
+  if not cmp then return nil end
+  local color = cmp.pct >= 0 and "|cff66dd77" or "|cffff6655"
+  return string.format("%s%+.1f%%|r vs last pull", color, cmp.pct)
+end
+
+-- "Eviscerate +1.2M, Rupture -300K"
+function Data.CompareSpellsText(cmp)
+  if not cmp then return nil end
+  local parts = {}
+  if cmp.up then parts[#parts + 1] = cmp.up.name .. " |cff66dd77+" .. AbbreviateNumbers(cmp.up.delta) .. "|r" end
+  if cmp.down then parts[#parts + 1] = cmp.down.name .. " |cffff6655-" .. AbbreviateNumbers(-cmp.down.delta) .. "|r" end
+  return #parts > 0 and table.concat(parts, ", ") or nil
+end
+
 function ns.Clock(seconds)
   seconds = math.max(0, math.floor(seconds))
   return string.format("%d:%02d", math.floor(seconds / 60), seconds % 60)
