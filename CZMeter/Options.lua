@@ -438,6 +438,12 @@ PAGES[#PAGES + 1] = { key = "display", label = "Display", build = function(page)
   left:Check("Show details when hovering a row", function() return GetOpt("hoverCard") end,
     function(v) SetOpt("hoverCard", v) end,
     "A short breakdown above the window. Clicking a row still opens the full one.")
+  left:Check("Personal best in chat after a kill", function() return GetOpt("pbChat") end,
+    function(v) SetOpt("pbChat", v) end,
+    "After each boss kill, one line with your DPS (HPS as a healer) against your best for that boss, difficulty and spec. /cz pb lists them.")
+  left:Check("Deaths in chat after a wipe", function() return GetOpt("deathSummary") end,
+    function(v) SetOpt("deathSummary", v) end,
+    "After a wipe, who died in order, what killed them and when. Click a death on the Deaths meter for the last hits.")
 
   left:Header("Overall data")
   left:Check("Clear the meter when a Mythic+ key starts",

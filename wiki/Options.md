@@ -15,6 +15,8 @@ At the top, pick the **window you're editing**, and tick **Editing group** to ch
 - Your own row: outline it, and give it a colour of its own
 - The minimap button
 - Show details when hovering a row
+- Personal best in chat after a kill
+- Deaths in chat after a wipe
 - Create, lock, ungroup, close or delete windows
 
 ![The Display page](https://ctrlshiftzed.com/assets/img/shots/czm-options-display.webp)

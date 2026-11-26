@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.0
+
+- **Personal bests:** after each boss kill, your DPS (HPS as a healer) is saved against that boss, difficulty and spec, with the key level in Mythic+. Every dungeon boss counts on its own, not just the whole run. One chat line says whether you beat your best and by how much, your row's hover card and details show your best, and `/cz pb` lists them for the spec you're in.
+- **Death recap:** on the Deaths meter, click a death to see the last hits before it, newest first: how long before the death, the spell, who cast it, the amount, overkill and health left. **Full recap** opens Blizzard's own recap with every hit.
+- **Deaths after a wipe:** after a wipe, one chat line per death in order, with what killed them and when in the fight.
+- Both chat lines can be turned off on the Display page.
+- **Item levels read once per key or raid:** each player's item level is read once and kept while you're in the dungeon or raid, then read again after you leave. They're also remembered between sessions now, so badges show straight away after a /reload.
+- Ready for patch 12.1.7.
+
 ## 0.5.0
 
 - **Compare to the last pull:** after a fight, the details panel and the hover card show how a player did against their previous pull on the same boss, as a percentage (per second, or the total for metrics without one), plus the spell that went up most and the one that went down most, for example "+4.2% vs last pull: Eviscerate +300K, Rupture -100K". Works for the current fight and any earlier pull in History. Not shown in combat, for Overall, best try or the Enemies tab, or on the first pull of a boss.

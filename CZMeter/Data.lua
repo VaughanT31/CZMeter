@@ -389,11 +389,15 @@ end
 -- Best try: the group's best DPS per boss and difficulty, saved after combat
 ---------------------------------------------------------------------------
 local pendingKey, lastKey
+local pendingKill, pendingWipe, pendingDifficulty
 
-function Data.EncounterEnded(encounterID, name, difficultyID)
+function Data.EncounterEnded(encounterID, name, difficultyID, success)
   pendingKey = encounterID .. ":" .. difficultyID
   lastKey = pendingKey
   Data.pendingName = name
+  pendingKill = success == 1
+  pendingWipe = success == 0
+  pendingDifficulty = difficultyID
 end
 
 function Data.BestTry()
@@ -430,26 +434,250 @@ function Data.SaveBestTry()
       maxAmount = session.maxAmount, rows = rows, when = time(),
     }
   end
+
+  local kill, wipe = pendingKill, pendingWipe
+  pendingKill, pendingWipe = nil, nil
+  if kill then Data.SavePersonalBest(key, session, duration) end
+  if wipe then Data.WipeSummary() end
+end
+
+---------------------------------------------------------------------------
+-- Personal bests (0.6.0): your own DPS and HPS per boss, difficulty and
+-- spec, saved after each kill. Dungeon bosses count one by one, which
+-- Raider.IO and Warcraft Logs only show as the whole run.
+--   CZMeterDB.pb["encounterID:difficultyID:specID"] = { name, dps, hps,
+--     duration, when, level (Mythic+ key level), spec }
+---------------------------------------------------------------------------
+local PREFIX = "|cfff59e3bCZ Meter|r: "
+
+local function SpecNow()
+  local ok, index = pcall(GetSpecialization)
+  if ok and index then
+    local ok2, id, specName = pcall(GetSpecializationInfo, index)
+    if ok2 and id then return id, specName end
+  end
+  local _, class = UnitClass("player")
+  return class or "?", UnitClass("player")
+end
+
+local function IsHealer()
+  local ok, index = pcall(GetSpecialization)
+  if not ok or not index then return false end
+  local ok2, role = pcall(GetSpecializationRole, index)
+  return ok2 and role == "HEALER"
+end
+
+local function KeyLevel()
+  if not C_ChallengeMode or not C_ChallengeMode.GetActiveKeystoneInfo then return nil end
+  local ok, level = pcall(C_ChallengeMode.GetActiveKeystoneInfo)
+  if ok and type(level) == "number" and level > 0 then return level end
+end
+
+-- Your per-second amount in a meter's current session, or nil.
+local function MinePerSecond(meterType, duration)
+  local ok, s = pcall(C_DamageMeter.GetCombatSessionFromType, Enum.DamageMeterSessionType.Current, meterType)
+  if not ok or type(s) ~= "table" then return nil end
+  for _, src in ipairs(s.combatSources or {}) do
+    if src.isLocalPlayer == true then
+      local total = src.totalAmount
+      if total == nil or issecret(total) then return nil end
+      return total / duration
+    end
+  end
+  return 0
+end
+
+local function DifficultyName(id)
+  local ok, name = pcall(GetDifficultyInfo, id)
+  return ok and name or nil
+end
+
+function Data.PersonalBestKey(encounterKey)
+  return encounterKey .. ":" .. tostring((SpecNow()))
+end
+
+function Data.SavePersonalBest(encounterKey, session, duration)
+  if not CZMeterDB.pb then CZMeterDB.pb = {} end
+  local dps = MinePerSecond(Enum.DamageMeterType.DamageDone, duration)
+  local hps = MinePerSecond(Enum.DamageMeterType.HealingDone, duration)
+  if not dps then return end
+  local healer = IsHealer()
+  local mine = healer and hps or dps
+  if not mine or mine <= 0 then return end
+  local specID, specName = SpecNow()
+  local key = encounterKey .. ":" .. tostring(specID)
+  local old = CZMeterDB.pb[key]
+  local oldMine = old and (healer and old.hps or old.dps)
+  local metric = healer and "HPS" or "DPS"
+  local where = Data.pendingName .. (DifficultyName(pendingDifficulty) and (" (" .. DifficultyName(pendingDifficulty) .. ")") or "")
+  if not oldMine or mine > oldMine then
+    CZMeterDB.pb[key] = {
+      name = Data.pendingName, dps = dps, hps = hps, duration = duration,
+      when = time(), level = KeyLevel(), spec = specName,
+    }
+    if CZMeterDB.opt.pbChat then
+      if oldMine and oldMine > 0 then
+        print(PREFIX .. string.format("new personal best on %s: %s %s, up %.1f%% from %s.",
+          where, AbbreviateNumbers(mine), metric, (mine - oldMine) / oldMine * 100, AbbreviateNumbers(oldMine)))
+      else
+        print(PREFIX .. string.format("first kill saved for %s: %s %s.", where, AbbreviateNumbers(mine), metric))
+      end
+    end
+  elseif CZMeterDB.opt.pbChat then
+    print(PREFIX .. string.format("%s: %s %s, %.1f%% under your best (%s).",
+      where, AbbreviateNumbers(mine), metric, (oldMine - mine) / oldMine * 100, AbbreviateNumbers(oldMine)))
+  end
+end
+
+-- "Your best here: 1.2M DPS" for your own row, on the boss last fought.
+function Data.PersonalBestText(src)
+  if not src or src.isLocalPlayer ~= true or not lastKey or not CZMeterDB.pb then return nil end
+  local pb = CZMeterDB.pb[Data.PersonalBestKey(lastKey)]
+  if not pb then return nil end
+  local healer = IsHealer()
+  local value = healer and pb.hps or pb.dps
+  if not value or value <= 0 then return nil end
+  return string.format("Your best on %s: %s %s%s", pb.name or "this boss", AbbreviateNumbers(value),
+    healer and "HPS" or "DPS", pb.level and (" (+" .. pb.level .. ")") or "")
+end
+
+-- Your personal bests for the spec you're in, newest first, as lines.
+function Data.PersonalBestLines()
+  local specID = tostring((SpecNow()))
+  local list = {}
+  for key, pb in pairs(CZMeterDB.pb or {}) do
+    local encounter, difficulty, spec = key:match("^(%d+):(%d+):(.+)$")
+    if spec == specID then
+      list[#list + 1] = { pb = pb, difficulty = tonumber(difficulty) }
+    end
+  end
+  table.sort(list, function(a, b) return (a.pb.when or 0) > (b.pb.when or 0) end)
+  local lines = {}
+  for _, e in ipairs(list) do
+    local pb = e.pb
+    local diff = DifficultyName(e.difficulty)
+    lines[#lines + 1] = string.format("%s%s: %s DPS%s%s", pb.name or "?", diff and (" (" .. diff .. ")") or "",
+      AbbreviateNumbers(pb.dps or 0), (pb.hps or 0) > 0 and (", " .. AbbreviateNumbers(pb.hps) .. " HPS") or "",
+      pb.level and (", +" .. pb.level) or "")
+  end
+  return lines
+end
+
+---------------------------------------------------------------------------
+-- Death recap (0.6.0): the last hits before a death, from Blizzard's own
+-- death recap (each death on the meter has one).
+---------------------------------------------------------------------------
+-- Newest first: { { name, icon, amount, overkill, caster, hp, ago, killing } }, or nil.
+function Data.DeathRecap(recapID)
+  if not recapID or recapID == 0 or issecret(recapID) or not C_DeathRecap then return nil end
+  local ok, events = pcall(C_DeathRecap.GetRecapEvents, recapID)
+  if not ok or type(events) ~= "table" or #events == 0 then return nil end
+  local okMax, maxHealth = pcall(C_DeathRecap.GetRecapMaxHealth, recapID)
+  if not okMax or not Plain(maxHealth) or maxHealth <= 0 then maxHealth = nil end
+  local last = 0
+  for _, e in ipairs(events) do
+    if Plain(e.timestamp) and e.timestamp > last then last = e.timestamp end
+  end
+  local list = {}
+  for i, e in ipairs(events) do
+    local name, icon = e.spellName, nil
+    if e.event == "SWING_DAMAGE" then
+      name = ACTION_SWING or "Melee"
+      icon = 132223
+    elseif e.event == "ENVIRONMENTAL_DAMAGE" and e.environmentalType then
+      name = _G["ACTION_ENVIRONMENTAL_DAMAGE_" .. string.upper(e.environmentalType)] or e.environmentalType
+    end
+    if not icon and e.spellId and C_Spell and C_Spell.GetSpellTexture then
+      local okIcon, tex = pcall(C_Spell.GetSpellTexture, e.spellId)
+      if okIcon then icon = tex end
+    end
+    list[#list + 1] = {
+      name = name or "?", icon = icon,
+      amount = Plain(e.amount) and e.amount or nil,
+      overkill = Plain(e.overkill) and e.overkill > 0 and e.overkill or nil,
+      caster = e.sourceName,
+      hp = maxHealth and Plain(e.currentHP) and math.floor(e.currentHP / maxHealth * 100) or nil,
+      ago = Plain(e.timestamp) and last - e.timestamp or nil,
+      killing = i == 1,
+    }
+  end
+  return list
+end
+
+-- After a wipe, one chat line per death in order: who, what killed them,
+-- and when in the fight.
+function Data.WipeSummary()
+  if not CZMeterDB.opt.deathSummary then return end
+  local ok, s = pcall(C_DamageMeter.GetCombatSessionFromType, Enum.DamageMeterSessionType.Current, Enum.DamageMeterType.Deaths)
+  if not ok or type(s) ~= "table" then return end
+  local deaths = {}
+  for _, src in ipairs(s.combatSources or {}) do
+    local at, id = src.deathTimeSeconds, src.deathRecapID
+    if id and id ~= 0 and Plain(at) and src.name and not issecret(src.name) then
+      deaths[#deaths + 1] = { name = src.name, at = at, id = id }
+    end
+  end
+  if #deaths == 0 then return end
+  table.sort(deaths, function(a, b) return a.at < b.at end)
+  print(PREFIX .. "deaths on " .. (Data.pendingName or "that pull") .. ":")
+  for i, d in ipairs(deaths) do
+    if i > 8 then
+      print(PREFIX .. string.format("  and %d more. Open the Deaths meter for all of them.", #deaths - 8))
+      break
+    end
+    local recap = Data.DeathRecap(d.id)
+    local blow = recap and recap[1]
+    local what = blow and (blow.name .. (blow.caster and (" (" .. blow.caster .. ")") or "")) or "unknown"
+    local name = Ambiguate and Ambiguate(d.name, "short") or d.name
+    print(PREFIX .. string.format("  %s %s - %s", ns.Clock(d.at), name, what))
+  end
 end
 
 ---------------------------------------------------------------------------
 -- Item levels: inspected out of combat, shown when the row can be identified
 ---------------------------------------------------------------------------
+-- Saved between sessions (CZMeterDB.itemLevels[guid] = { l = level, t = when,
+-- s = stale }). Read once per player and kept for the whole key or raid:
+-- inside an instance nobody known is inspected again. Leaving the instance
+-- marks them stale, so they're read again (the old number shows until then).
 local itemLevels = {}
 local queue = {}
+local KEEP_DAYS = 7
+
+function Data.UseSavedItemLevels(saved)
+  itemLevels = saved
+  local cutoff = time() - KEEP_DAYS * 86400
+  for guid, entry in pairs(itemLevels) do
+    if type(entry) ~= "table" or (entry.t or 0) < cutoff then
+      itemLevels[guid] = nil
+    elseif time() - (entry.t or 0) > 86400 then
+      entry.s = true
+    end
+  end
+end
+
+function Data.MarkItemLevelsStale()
+  for _, entry in pairs(itemLevels) do entry.s = true end
+end
+
+local function InInstance()
+  local inInstance, kind = IsInInstance()
+  return inInstance and (kind == "party" or kind == "raid")
+end
 local inspecting
 local INSPECT_GAP = 2
 local lastInspect = 0
 
 function Data.ItemLevel(guid)
   if guid == nil or issecret(guid) then return nil end
-  return itemLevels[guid]
+  local entry = itemLevels[guid]
+  return entry and entry.l
 end
 
 function Data.ReadOwnItemLevel()
   local _, equipped = GetAverageItemLevel()
   local guid = UnitGUID("player")
-  if equipped ~= nil and not issecret(equipped) and guid then itemLevels[guid] = math.floor(equipped) end
+  if equipped ~= nil and not issecret(equipped) and guid then itemLevels[guid] = { l = math.floor(equipped), t = time() } end
 end
 
 function Data.QueueGroup()
@@ -459,7 +687,10 @@ function Data.QueueGroup()
   for i = 1, count do
     local unit = prefix .. i
     local guid = UnitGUID(unit)
-    if guid and not issecret(guid) and not itemLevels[guid] and not UnitIsUnit(unit, "player") then
+    local known = guid and itemLevels[guid]
+    -- Unknown, or stale while out of an instance.
+    local want = not known or (known.s and not InInstance())
+    if guid and not issecret(guid) and want and not UnitIsUnit(unit, "player") then
       queue[#queue + 1] = unit
     end
   end
@@ -486,7 +717,7 @@ function Data.InspectReady(guid)
     local unit = prefix .. i
     if UnitGUID(unit) == guid then
       local level = C_PaperDollInfo.GetInspectItemLevel(unit)
-      if level ~= nil and not issecret(level) and level > 0 then itemLevels[guid] = math.floor(level) end
+      if level ~= nil and not issecret(level) and level > 0 then itemLevels[guid] = { l = math.floor(level), t = time() } end
       break
     end
   end

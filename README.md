@@ -14,7 +14,9 @@
 - **More than one window:** up to six, each with its own metric. Drag them together and they snap into a group that moves and locks as one.
 - **Skins you can share:** Default, Minimal and Classic built in, or make your own and send it to a friend as a text string.
 - **Your own row:** outlined and always on the list, even when you're below the cut.
-- **Item level badges** next to each player, read out of combat.
+- **Personal bests** per boss, difficulty and spec, dungeon bosses included, with one chat line after each kill and `/cz pb` to list them.
+- **Death recap:** click a death for the last hits before it, and a short list of deaths in chat after a wipe.
+- **Item level badges** next to each player, read once per key or raid out of combat and remembered between sessions.
 - **Light on your frame rate:** a few redraws a second in combat, and nothing at all out of combat unless something changed.
 
 No setup. Install it, type `/cz`, and the meter is there.

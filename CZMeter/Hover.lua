@@ -288,6 +288,8 @@ function Hover.Refresh()
   local listBottom = TOP_HEIGHT + shown * (ROW_HEIGHT + ROW_GAP)
   card.note:ClearAllPoints()
   card.note:SetPoint("TOPLEFT", PAD, -(listBottom + 4))
+  local pbLine = not enemies and Data.PersonalBestText(src)
+  if pbLine then cmpLine = cmpLine and (cmpLine .. "\n" .. pbLine) or pbLine end
   card.note:SetText(cmpLine and (cmpLine .. "\n" .. note) or note)
   Color(card.note, dim)
   card:SetHeight(listBottom + 8 + card.note:GetStringHeight() + PAD)

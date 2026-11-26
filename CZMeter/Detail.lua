@@ -247,6 +247,35 @@ local function Build(info)
     spells, readable = Data.Spells(Data.ReadSource(win, metric.key, info.guid))
   end
 
+  -- Deaths: the last hits before the death, from Blizzard's death recap.
+  local recapID = metric.key == "Deaths" and not ns.testMode and src.deathRecapID
+  if state.tab == "spells" and recapID and recapID ~= 0 and not issecret(recapID) then
+    local recap = not InCombatLockdown() and Data.DeathRecap(recapID)
+    if not recap then
+      note = InCombatLockdown() and "The death recap shows once combat ends." or "No recap for this death."
+    else
+      entries[#entries + 1] = { header = true, name = "Last hits before the death, newest first" }
+      local max = 1
+      for _, hit in ipairs(recap) do if hit.amount and hit.amount > max then max = hit.amount end end
+      for _, hit in ipairs(recap) do
+        local label = (hit.ago and string.format("-%.1fs  ", hit.ago) or "") .. hit.name
+          .. (hit.caster and ("  |cff9aa0aa" .. hit.caster .. "|r") or "")
+        local tip = { hit.name }
+        if hit.caster then tip[#tip + 1] = "From: " .. hit.caster end
+        if hit.amount then tip[#tip + 1] = "Hit for: " .. ns.Num(hit.amount) end
+        if hit.overkill then tip[#tip + 1] = "Overkill: " .. ns.Num(hit.overkill) end
+        if hit.hp then tip[#tip + 1] = "Health before: " .. hit.hp .. "%" end
+        entries[#entries + 1] = {
+          name = label, icon = hit.icon, total = hit.amount or 0, max = max,
+          color = hit.killing and { 0.85, 0.30, 0.28 } or { 0.55, 0.58, 0.64 },
+          rankText = hit.hp and (hit.hp .. "% hp") or "", tip = tip,
+        }
+      end
+      note = "Full recap opens Blizzard's own, with every hit."
+    end
+    return entries, note, recapID
+  end
+
   if state.tab == "spells" then
     if #spells == 0 then
       note = "No spell breakdown for this player and metric."
@@ -362,6 +391,16 @@ local function BuildPanel()
   panel.list:SetHeight(LIST_ROWS * (ROW_HEIGHT + ROW_GAP))
   panel.rows = {}
 
+  -- Blizzard's full death recap, on the Deaths meter's spells tab.
+  panel.recap = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
+  panel.recap:SetSize(96, 20)
+  panel.recap:SetPoint("TOPRIGHT", -14, -104)
+  panel.recap:SetText("Full recap")
+  panel.recap:SetScript("OnClick", function(self)
+    if self.recapID and OpenDeathRecapUI then OpenDeathRecapUI(self.recapID) end
+  end)
+  panel.recap:Hide()
+
   panel.note = Label(panel, 10)
   panel.note:SetPoint("BOTTOMLEFT", 14, 12)
   panel.note:SetWidth(WIDTH - 28)
@@ -434,6 +473,8 @@ function Detail.Refresh(force)
     local spells = Data.CompareSpellsText(cmp)
     if spells then sub = sub .. ": " .. spells end
   end
+  local pbLine = Data.PersonalBestText(src)
+  if pbLine then sub = sub .. "  |  " .. pbLine end
   panel.sub:SetText(sub)
   Color(panel.sub, dim)
 
@@ -457,7 +498,9 @@ function Detail.Refresh(force)
     Color(box.value, { 0.91, 0.92, 0.95 })
   end
 
-  local entries, note = Build(info)
+  local entries, note, recapID = Build(info)
+  panel.recap.recapID = recapID
+  panel.recap:SetShown(recapID ~= nil and recapID ~= 0 and OpenDeathRecapUI ~= nil)
   state.offset = math.max(0, math.min(state.offset, #entries - LIST_ROWS))
   for i = 1, LIST_ROWS do
     local entry = entries[i + state.offset]

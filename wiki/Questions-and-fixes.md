@@ -6,6 +6,10 @@
 
 In Midnight the game hides meter values from addons during combat. CZ Meter can still draw them, so bars and numbers stay live, but anything it works out itself (share, the spell breakdown, item levels) fills in once the fight ends.
 
+**When are item levels read?**
+
+Out of combat, once per player. Inside a dungeon or raid nobody is read again, since gear doesn't change mid-key; after you leave, everyone is read again. They're remembered between sessions, so badges show straight away after a /reload.
+
 **Why can't I open another player's details in combat?**
 
 For the same reason: their numbers are hidden from addons until combat ends. Your own details open any time.

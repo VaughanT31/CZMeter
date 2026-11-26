@@ -11,6 +11,7 @@ CZ Meter answers to `/cz` and `/czmeter`.
 | `/cz new` | Open another window |
 | `/cz lock` | Lock or unlock every window |
 | `/cz test` | Test bars on or off |
+| `/cz pb` | Your personal bests for the spec you're in |
 | `/cz help` | The list of commands |
 
 ---

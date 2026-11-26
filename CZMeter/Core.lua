@@ -6,6 +6,7 @@ local OPT_DEFAULTS = {
   combatUpdate = 0.25, wheel = 1, numbers = "short",
   autoLog = "off", logWarn = true, clearOnKey = false, clearOnInstance = false,
   minimapButton = true, minimapAngle = 200, hoverCard = true,
+  pbChat = true, deathSummary = true,
   logRemindHours = 10, logSeconds = 0,
 }
 local PREFIX = "|cfff59e3bCZ Meter|r: "
@@ -37,6 +38,9 @@ local function LoadSettings()
   local db = CZMeterDB
   MoveOldSettings(db)
   db.best = db.best or {}
+  db.pb = db.pb or {}
+  db.itemLevels = db.itemLevels or {}
+  Data.UseSavedItemLevels(db.itemLevels)
   db.skins = db.skins or {}
   db.opt = db.opt or {}
   Fill(db.opt, OPT_DEFAULTS)
@@ -145,8 +149,17 @@ function ns.CheckCombatLog()
 end
 
 local lastInstance
+local wasInInstance = false
+
 local function OnEnterWorld()
   local inInstance, kind = IsInInstance()
+  local nowIn = inInstance and (kind == "party" or kind == "raid")
+  -- Left a dungeon or raid: item levels are read again from here on.
+  if wasInInstance and not nowIn then
+    Data.MarkItemLevelsStale()
+    if not InCombatLockdown() then Data.QueueGroup() end
+  end
+  wasInInstance = nowIn
   if inInstance and (kind == "party" or kind == "raid") then
     local instanceID = select(8, GetInstanceInfo())
     if CZMeterDB.opt.clearOnInstance and lastInstance and instanceID ~= lastInstance and not InCombatLockdown() then
@@ -197,8 +210,8 @@ events:SetScript("OnEvent", function(_, event, ...)
     ns.combatStart = GetTime()
     Window.MarkDirty()
   elseif event == "ENCOUNTER_END" then
-    local encounterID, name, difficultyID = ...
-    Data.EncounterEnded(encounterID, name, difficultyID)
+    local encounterID, name, difficultyID, _, success = ...
+    Data.EncounterEnded(encounterID, name, difficultyID, success)
     if not InCombatLockdown() then OnLeaveCombat() end
   elseif event == "CHALLENGE_MODE_START" then
     if CZMeterDB.opt.clearOnKey then ns.ResetMeter() end
@@ -231,6 +244,7 @@ local HELP = {
   "/cz new  open another window",
   "/cz lock  lock or unlock every window",
   "/cz test  fill the windows with test bars",
+  "/cz pb  your personal bests for this spec",
 }
 
 SLASH_CZMETER1 = "/cz"
@@ -248,6 +262,17 @@ SlashCmdList.CZMETER = function(msg)
     local lock = not (list[1] and list[1].db.locked)
     for _, w in ipairs(list) do Window.SetLocked(w, lock) end
     print(PREFIX .. (lock and "windows locked." or "windows unlocked."))
+  elseif cmd == "pb" or cmd == "best" then
+    local lines = Data.PersonalBestLines()
+    if #lines == 0 then
+      print(PREFIX .. "no personal bests for this spec yet. They're saved after each boss kill.")
+    else
+      print(PREFIX .. "personal bests for this spec, newest first:")
+      for i, line in ipairs(lines) do
+        if i > 15 then break end
+        print(PREFIX .. "  " .. line)
+      end
+    end
   elseif cmd == "test" then
     ns.SetTestMode(not ns.testMode)
     print(PREFIX .. (ns.testMode and "test bars on." or "test bars off."))
